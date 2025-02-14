@@ -1,12 +1,14 @@
 {
   "name": "my-app",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify"
   },
   "dependencies": {
     "hono": "^4.7.1"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "wrangler": "^3.101.0"
   }
 }
