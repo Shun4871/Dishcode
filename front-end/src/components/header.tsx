@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
+
 const Header = () => {
   return (
     <header className="bg-[#DD9004] text-white h-16 fixed top-0 left-0 w-full flex items-center">
