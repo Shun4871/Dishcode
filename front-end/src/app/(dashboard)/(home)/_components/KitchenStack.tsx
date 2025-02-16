@@ -23,7 +23,7 @@ const kitchenOptions = [
 
 export function KitchenStack() {
   return (
-    <div className="grid grid-cols-2 gap-8 p-6 border rounded-2xl shadow">
+    <div className="grid grid-cols-2 gap-8 p-6 border rounded-2xl shadow ">
       {kitchenOptions.map(({ label, type, options }) => (
         <div key={label} className="flex items-center justify-between space-y-4">
           <span className="font-bold">{label}</span>

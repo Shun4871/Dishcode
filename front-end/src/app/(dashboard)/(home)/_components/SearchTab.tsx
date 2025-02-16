@@ -14,49 +14,52 @@ const recipeCategories = [
   { title: "その他", items: ["パイ・キッシュ", "グラタン・ドリア・ラザニア", "コロッケ", "粉物", "餅", "中華まん", "餃子・シュウマイ・春巻き", "天ぷら・かき揚げ"] }
 ];
 
-export  function SearchTab() {
-  return (
-    <Tabs defaultValue="ingredients" className="p-6 border rounded-2xl shadow">
-      <TabsList className="mb-6">
-        <TabsTrigger value="ingredients" className="font-bold">材料から探す</TabsTrigger>
-        <TabsTrigger value="recipes" className="font-bold">料理名から探す</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="ingredients">
-        <div className="grid grid-cols-2 gap-8">
-          {ingredientCategories.map(({ title, items }) => (
-            <div key={title} className="mb-4">
-              <h3 className="font-bold mb-2">{title}</h3>
-              <ul className="grid grid-cols-3 gap-2">
-                {items.map(item => (
-                  <li key={item} className="flex items-center space-x-1">
-                    <ChevronRight size={16} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+export function SearchTab() {
+    return (
+      <Tabs defaultValue="ingredients" className="p-6 border rounded-2xl shadow">
+        <TabsList className="mb-6">
+          <TabsTrigger value="ingredients" className="font-bold">材料から探す</TabsTrigger>
+          <TabsTrigger value="recipes" className="font-bold">料理名から探す</TabsTrigger>
+        </TabsList>
+  
+        <div className="min-h-[400px]">
+          <TabsContent value="ingredients" className="h-full">
+            <div className="grid grid-cols-2 gap-8">
+              {ingredientCategories.map(({ title, items }) => (
+                <div key={title} className="mb-4">
+                  <h3 className="font-bold mb-2">{title}</h3>
+                  <ul className="grid grid-cols-3 gap-2">
+                    {items.map(item => (
+                      <li key={item} className="flex items-center space-x-1">
+                        <ChevronRight size={16} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </TabsContent>
-
-      <TabsContent value="recipes">
-        <div className="grid grid-cols-2 gap-8">
-          {recipeCategories.map(({ title, items }) => (
-            <div key={title} className="mb-4">
-              <h3 className="font-bold mb-2">{title}</h3>
-              <ul className="grid grid-cols-3 gap-2">
-                {items.map(item => (
-                  <li key={item} className="flex items-center space-x-1">
-                    <ChevronRight size={16} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+          </TabsContent>
+  
+          <TabsContent value="recipes" className="h-full">
+            <div className="grid grid-cols-2 gap-8">
+              {recipeCategories.map(({ title, items }) => (
+                <div key={title} className="mb-4">
+                  <h3 className="font-bold mb-2">{title}</h3>
+                  <ul className="grid grid-cols-3 gap-2">
+                    {items.map(item => (
+                      <li key={item} className="flex items-center space-x-1">
+                        <ChevronRight size={16} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-          ))}
+          </TabsContent>
         </div>
-      </TabsContent>
-    </Tabs>
-  );
-}
+      </Tabs>
+    );
+  }
+  
