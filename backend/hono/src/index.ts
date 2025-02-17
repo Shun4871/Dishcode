@@ -6,7 +6,4 @@ app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
-export default { 
-  port: 3000, 
-  fetch: app.fetch, 
-}
+export default app
