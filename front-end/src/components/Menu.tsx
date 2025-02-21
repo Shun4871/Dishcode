@@ -4,10 +4,6 @@ import Image from "next/image";
 const menuItems = [
   { name: "Top", path: "/", img: "/home_icon.svg" },
   { name: "お気に入り", path: "/favorite", img: "/favorite_icon.svg" },
-  { name: "設定", path: "/setting", img: "/settings_icon.svg" },
- // { name: "アレルギー除外", path: "/allergy", img: "/allergy_icon.svg" },
-  //設定　ー＞　アレルギー除外　とかに名前変えてもいいかも
-  //{ name: "ログアウト", path: "/logout", img: "/logout_icon.svg" },
 ];
 
 const Menu = ({ isOpen, closeMenu }: { isOpen: boolean; closeMenu: () => void }) => {

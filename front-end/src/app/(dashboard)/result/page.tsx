@@ -1,4 +1,3 @@
- 
 import SearchResultItem from "@/components/SearchResultItem";
 
 const items = [
