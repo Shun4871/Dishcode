@@ -17,5 +17,14 @@ datasource db {
 // 追加1: User Entity 定義
 model User {
   user_id   Int      @id @default(autoincrement())
-  clerk_id string
+  clerk_id String  @unique
+}
+
+//追加: 
+model Favorite {
+  favorite_id Int @id @default(autoincrement())
+  user_id Int
+  product_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
