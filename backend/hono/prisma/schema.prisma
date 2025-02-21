@@ -18,20 +18,4 @@ datasource db {
 model User {
   user_id   Int      @id @default(autoincrement())
   clerk_id string
-  name      String?
-  createdAt DateTime @default(now())
-  posts     Post[]
 }
-
-// 追加2: Post Entity 定義
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [user_id])
-  authorId  Int
-  createdAt DateTime @default(now())
-}
-
-
