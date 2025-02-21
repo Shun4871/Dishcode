@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { useUser, SignOutButton } from "@clerk/nextjs"; // SignOutButtonをインポート
 import Menu from "./Menu";
+import { Input } from "postcss";
+
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
