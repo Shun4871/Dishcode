@@ -3,10 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useUser, SignOutButton } from "@clerk/nextjs"; // SignOutButtonをインポート
 import Menu from "./Menu";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isSignedIn } = useUser(); // ログイン状態を取得
+
 
   const closeMenu = () => {
     setMenuOpen(false);
@@ -49,6 +52,15 @@ const Header = () => {
             <Image src="/menu.svg" alt="menu" width={40} height={40} />
           </button>
         </div>
+
+        {/* ログアウトボタン */}
+        {isSignedIn && (
+          <SignOutButton>
+            <button className="bg-red-500 text-white p-2 rounded">
+              ログアウト
+            </button>
+          </SignOutButton>
+        )}
 
         {/* メニューコンポーネント */}
          <Menu isOpen={menuOpen} closeMenu={closeMenu} />   
