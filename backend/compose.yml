@@ -5,13 +5,9 @@ services:
       context: .
       dockerfile: api.Dockerfile
     ports:
-      - "8080:8080"
+      - "8000:8000"
     volumes:
-      - ./hono:/app
-      - /app/node_modules
-    command: bun run dev
-    environment:
-      - NODE_ENV=development
+      - ./agent:/agent
 
   db:
     build:

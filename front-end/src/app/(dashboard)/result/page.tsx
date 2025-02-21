@@ -24,7 +24,11 @@ const items = [
   },
 ];
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: any) {
+  const data = await searchParams
+  console.log(data);
   return (
     <div className="flex flex-col gap-6 h-screen w-full justify-center items-center">
       {items.map((item, index) => (
