@@ -46,8 +46,7 @@ const Header = () => {
             className="w-full h-10 px-10 pl-10 rounded-full text-black"
           />
         </div>
-
-       
+      
         {/* メニューボタン */}
         <div className="bg-white rounded-lg p-1 relative">
           <button onClick={() => setMenuOpen(!menuOpen)} className="h-8 w-10">
