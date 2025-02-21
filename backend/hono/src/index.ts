@@ -31,7 +31,7 @@ app.get('/', (c) => {
     })
 })
 
-    .post("/webhook/clerk", async (c) => {
+    app.post("/webhook/clerk", async (c) => {
         const SIGNING_SECRET = process.env.SIGNING_SECRET
 
         if (!SIGNING_SECRET) {
@@ -78,6 +78,138 @@ app.get('/', (c) => {
             status: 400
         })
     })
+
+    //Userのお気に入りを押した時の処理
+    app.post('/favorite', async (c) => {
+        try {
+            // Clerk認証情報を取得
+            const auth = getAuth(c)
+            if (!auth?.userId) {
+                return c.json({ error: 'Unauthorized' }, 401)
+            }
+    
+            // `clerk_id` から `user_id` を取得
+            const user = await prisma.user.findUnique({
+                where: { clerk_id: auth.userId },
+            })
+    
+            if (!user) {
+                return c.json({ error: 'User not found' }, 404)
+            }
+    
+            // リクエストボディを取得
+            const body = await c.req.json()
+            const { favorite_url } = body
+    
+            if (!favorite_url) {
+                return c.json({ error: 'favorite_url is required' }, 400)
+            }
+    
+            // お気に入りをデータベースに追加
+            const favorite = await prisma.favorite.create({
+                data: {
+                    user_id: user.user_id,
+                    favorite_url: String(favorite_url),
+                },
+            })
+    
+            return c.json({ message: 'Favorite added successfully', favorite })
+        } catch (error) {
+            console.error(error)
+            return c.json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }, 500)
+        }
+    })
+    
+    // お気に入りを削除
+    app.delete('/favorite', async (c) => {
+        try {
+            // Clerk認証情報を取得
+            const auth = getAuth(c)
+            if (!auth?.userId) {
+                return c.json({ error: 'Unauthorized' }, 401)
+            }
+    
+            // `clerk_id` から `user_id` を取得
+            const user = await prisma.user.findUnique({
+                where: { clerk_id: auth.userId },
+            })
+    
+            if (!user) {
+                return c.json({ error: 'User not found' }, 404)
+            }
+    
+            // リクエストボディを取得
+            const body = await c.req.json()
+            const { favorite_url } = body
+    
+            if (!favorite_url) {
+                return c.json({ error: 'favorite_url is required' }, 400)
+            }
+    
+            // お気に入りを削除
+            const deletedFavorite = await prisma.favorite.deleteMany({
+                where: {
+                    user_id: user.user_id,
+                    favorite_url: String(favorite_url),
+                },
+            })
+    
+            if (deletedFavorite.count === 0) {
+                return c.json({ error: 'No matching favorite found' }, 404)
+            }
+    
+            return c.json({ message: 'Favorite deleted successfully' })
+        } catch (error) {
+            console.error(error)
+            return c.json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }, 500)
+        }
+    })
+
+    //Pythonサーバー(port:8000)をvalueそのままで叩く
+    app.get("/recipe", async (c) => {
+        try {
+            // クエリパラメータを取得
+            const queryParams = c.req.query()
+    
+            // 転送先のURL（適宜変更）
+            const targetServerUrl = "https://example.com/recipe"
+    
+            // 転送リクエストを送信
+            const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
+                method: 'GET',
+            })
+    
+            // HTTPステータスコードのチェック
+            if (!response.ok) {
+                return c.json({ error: "Failed to fetch data from target server" }, 500)
+            }
+    
+            // JSONデータとしてレスポンスを取得
+            const data: unknown = await response.json()
+    
+            // nullチェック
+            if (data === null || typeof data !== "object") {
+                return c.json({ error: "Invalid response format from target server" }, 500)
+            }
+    
+            // `data` を型アサーション
+            const responseData = data as { url1?: string; url2?: string; url3?: string }
+    
+            // 必須プロパティの存在チェック
+            if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
+                return c.json({ error: "Invalid response format from target server" }, 500)
+            }
+    
+            return c.json(responseData)
+        } catch (error) {
+            // `error` が unknown 型にならないように処理
+            const errorMessage = error instanceof Error ? error.message : "Unknown error"
+            return c.json({ error: "Internal server error", details: errorMessage }, 500)
+        }
+    })
+
+
+    
 
 
 export default {

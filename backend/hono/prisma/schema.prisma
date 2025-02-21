@@ -24,7 +24,5 @@ model User {
 model Favorite {
   favorite_id Int @id @default(autoincrement())
   user_id Int
-  product_id Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  favorite_url String
 }
