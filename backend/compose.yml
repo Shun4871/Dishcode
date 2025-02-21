@@ -1,0 +1,32 @@
+version: '3.9'
+services:
+  hono-api:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./agent:/agent
+
+  db:
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: dishcode
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+    tty: true
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/mysql
+    networks:
+      - dishcode
+
+networks:
+  dishcode:
+    driver: bridge

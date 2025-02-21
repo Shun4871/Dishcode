@@ -1,12 +1,8 @@
+
 import { Hono } from 'hono'
 
-const app = new Hono()
+import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
 
-export default { 
-  port: 3000, 
-  fetch: app.fetch, 
-}
+
+export default app
