@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 import React, { useState } from "react";
 import Image from "next/image";
 
@@ -65,3 +65,4 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({
 };
 
 export default SearchResultItem;
+*/

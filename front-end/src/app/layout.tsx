@@ -16,9 +16,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="ja">
-        <body>
+      <body className="flex flex-col min-h-screen">
+          {/* ヘッダー */}
           <Header />
-          {children}
+
+          {/* ヘッダーの高さ分余白を確保 (約50px) */}
+          <main className="my-32 flex-1">{children}</main>
         </body>
       </html>
     </ClerkProvider>
