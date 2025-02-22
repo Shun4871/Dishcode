@@ -1,0 +1,12 @@
+services:
+  agent:
+    volumes:
+     - ./:/app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env

@@ -43,7 +43,7 @@ export default function Page() {
   
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8000/recipe?${params.toString()}`, {
+      const res = await fetch(`http://localhost:8080/recipe?${params.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 fastapi
 uvicorn
 python-dotenv
-langchain_openai
+playwright
 browser_use
+langchain_openai
