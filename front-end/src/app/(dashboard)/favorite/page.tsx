@@ -1,8 +1,4 @@
-"use client"
-
-import UrlWindow from "@/components/ui/urlWindow";
-import { use } from "react";
-
+import UrlWindow from "@/components/ui/UrlWindow"; // パスはプロジェクト構造に合わせる
 
 const recipeData = [
   {
@@ -24,8 +20,8 @@ const recipeData = [
 
 export default function Home() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">おすすめレシピ</h1>
+    <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
+      <h1 className="text-2xl font-bold mb-4">お気に入りレシピ</h1>
       <UrlWindow recipes={recipeData} />
     </div>
   );

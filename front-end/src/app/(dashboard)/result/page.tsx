@@ -1,48 +1,32 @@
 
-import SearchResultItem from "@/components/SearchResultItem";
+import UrlWindow from "@/components/ui/UrlWindow"; // パスはプロジェクト構造に合わせる
 
 const items = [
   {
-    img: "/sample-image.jpg",
-    description: "料理１のディスクリプション",
-    title: "料理１のタイトル",
-    summary: "料理１の要約がここにいい感じに",
-    like: true,
+    title: "簡単おうちでお店みたいな回鍋肉",
+    image: "https://cookpad.com/jp/recipes/17662797/image.jpg",
+    url: "https://cookpad.com/jp/recipes/17662797",
   },
   {
-    img: "/sample-image.jpg",
-    description: "料理２のディスクリプション",
-    title: "料理２のタイトル",
-    summary: "料理２の要約がここにいい感じに",
-    like: false,
+    title: "レンジで絶品！白菜と豚ロース肉の重ね蒸し",
+    image: "https://mi-journey.jp/foodie/80782/image.jpg",
+    url: "https://mi-journey.jp/foodie/80782/",
   },
   {
-    img: "/sample-image.jpg",
-    description: "料理３のディスクリプション",
-    title: "料理３のタイトル",
-    summary: "料理３の要約がここにいい感じに",
-    like: false,
+    title: "やみつき！キャベツと豚肉のうま塩炒め",
+    image: "https://delishkitchen.tv/recipes/147726740259602726/image.jpg",
+    url: "https://delishkitchen.tv/recipes/147726740259602726",
   },
 ];
 
-export default async function Home({
-  searchParams,
-}: any) {
-  const data = await searchParams
-  console.log(data);
+export default function Home() {
   return (
-    <div className="flex flex-col gap-6 h-screen w-full justify-center items-center">
-      {items.map((item, index) => (
-        <SearchResultItem
-          key={index}
-          img={item.img}
-          description={item.description}
-          title={item.title}
-          summary={item.summary}
-          like={item.like}
-        />
-      ))}
-      <button className="w-60 h-20 bg-[#DD9004] text-3xl text-white rounded-2xl">
+    <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
+      <h1 className="text-2xl font-bold mb-4">おすすめレシピ</h1>
+      <UrlWindow recipes={items} />
+
+      {/* もう一回ボタン */}
+      <button className="w-60 h-20 bg-[#DD9004] text-3xl text-white rounded-2xl mb-12">
         もう一回
       </button>
     </div>
