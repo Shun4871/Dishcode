@@ -64,4 +64,4 @@ const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   );
 };
 
-export default UrlWindow;
+export { UrlWindow };
