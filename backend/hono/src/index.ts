@@ -1,5 +1,6 @@
 
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 import { Prisma, PrismaClient } from "@prisma/client";
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
@@ -9,29 +10,19 @@ import { Webhook } from 'svix'
 import { z } from 'zod'
 // import { zValidate } from '@hono/zod-validate'
 
+
+
 const app = new Hono()
 
 const prisma = new PrismaClient();
 
+
 const db = prisma
 
-app.use('*', clerkMiddleware())
-app.get('/', (c) => {
-    const auth = getAuth(c)
 
-    if (!auth?.userId) {
-        return c.json({
-            message: 'You are not logged in.'
-        })
-    }
+app.use('*', cors({ origin: 'http://localhost:3000' }))
 
-    return c.json({
-        message: 'You are logged in!',
-        userId: auth.userId
-    })
-})
-
-    app.post("/webhook/clerk", async (c) => {
+    app.post("/webhook/clerk", clerkMiddleware(), (c) => {
         const SIGNING_SECRET = process.env.SIGNING_SECRET
 
         if (!SIGNING_SECRET) {
@@ -46,7 +37,7 @@ app.get('/', (c) => {
                 status: 400,
             })
         }
-        const payload = await c.req.json()
+        const payload =  c.req.json()
         const body = JSON.stringify(payload)
 
         let evt: WebhookEvent
@@ -65,7 +56,7 @@ app.get('/', (c) => {
         }
 
         if (evt.type === 'user.created') {
-            await prisma.user.create({
+            prisma.user.create({
                 data: {
                     clerk_id: evt.data.id,
                 }
@@ -76,7 +67,7 @@ app.get('/', (c) => {
         }
 
         if (evt.type === 'user.deleted') {
-            await prisma.user.delete({
+            prisma.user.delete({
                 where: {
                     clerk_id: evt.data.id,
                 }
@@ -177,50 +168,54 @@ app.get('/', (c) => {
     })
 
     //Pythonサーバー(port:8000)をvalueそのままで叩く
+    // app.get("/recipe", async (c) => {
+    //     try {
+    //         // クエリパラメータを取得
+    //         const queryParams = c.req.query()
+    
+    //         // 転送先のURL（適宜変更）
+    //         const targetServerUrl = "https://example.com/recipe"
+    
+    //         // 転送リクエストを送信
+    //         const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
+    //             method: 'GET',
+    //         })
+    
+    //         // HTTPステータスコードのチェック
+    //         if (!response.ok) {
+    //             return c.json({ error: "Failed to fetch data from target server" }, 500)
+    //         }
+    
+    //         // JSONデータとしてレスポンスを取得
+    //         const data: unknown = await response.json()
+    
+    //         // nullチェック
+    //         if (data === null || typeof data !== "object") {
+    //             return c.json({ error: "Invalid response format from target server" }, 500)
+    //         }
+    
+    //         // `data` を型アサーション
+    //         const responseData = data as { url1?: string; url2?: string; url3?: string }
+    
+    //         // 必須プロパティの存在チェック
+    //         if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
+    //             return c.json({ error: "Invalid response format from target server" }, 500)
+    //         }
+    
+    //         return c.json(responseData)
+    //     } catch (error) {
+    //         // `error` が unknown 型にならないように処理
+    //         const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    //         return c.json({ error: "Internal server error", details: errorMessage }, 500)
+    //     }
+    // })
     app.get("/recipe", async (c) => {
-        try {
-            // クエリパラメータを取得
-            const queryParams = c.req.query()
-    
-            // 転送先のURL（適宜変更）
-            const targetServerUrl = "https://example.com/recipe"
-    
-            // 転送リクエストを送信
-            const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-                method: 'GET',
-            })
-    
-            // HTTPステータスコードのチェック
-            if (!response.ok) {
-                return c.json({ error: "Failed to fetch data from target server" }, 500)
-            }
-    
-            // JSONデータとしてレスポンスを取得
-            const data: unknown = await response.json()
-    
-            // nullチェック
-            if (data === null || typeof data !== "object") {
-                return c.json({ error: "Invalid response format from target server" }, 500)
-            }
-    
-            // `data` を型アサーション
-            const responseData = data as { url1?: string; url2?: string; url3?: string }
-    
-            // 必須プロパティの存在チェック
-            if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
-                return c.json({ error: "Invalid response format from target server" }, 500)
-            }
-    
-            return c.json(responseData)
-        } catch (error) {
-            // `error` が unknown 型にならないように処理
-            const errorMessage = error instanceof Error ? error.message : "Unknown error"
-            return c.json({ error: "Internal server error", details: errorMessage }, 500)
-        }
-    })
-
-
-    
+        return c.json({
+        url1: "https://cookpad.com/jp/recipes/17662797",
+        url2: "https://mi-journey.jp/foodie/80782/",
+        url3: "https://delishkitchen.tv/recipes/147726740259602726"
+        });
+    });
 
 
 export default {
