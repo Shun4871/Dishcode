@@ -11,7 +11,7 @@ app = FastAPI()
 async def search_recipes(conditions: List[str]):
     load_dotenv()
 
-    prompt = f"以下の条件に合う日本語のレシピを3つ検索し、URLを教えてください。\n\n" + "\n".join(f"- {condition}" for condition in conditions)
+    prompt = f'以下の条件に合う日本語のレシピを3つ検索し、URLを教えてください。回答はjson形式で、{{"url1":"link","url2":"link","url3":"link"}}\\の形にしてください。\n\n' + '\n'.join(f'- {condition}' for condition in conditions)
 
     agent = Agent(
         task=prompt,
@@ -47,7 +47,7 @@ async def get_urls(
     # 非同期処理で検索を実行
     result = await search_recipes(conditions)
 
-    return JSONResponse(content=result)
+    return JSONResponse(content={"result": str(result)})
 
 if __name__ == "__main__":
     import uvicorn
