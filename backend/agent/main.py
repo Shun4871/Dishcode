@@ -5,9 +5,11 @@ from langchain_openai import ChatOpenAI
 from browser_use import Agent
 from dotenv import load_dotenv
 import asyncio
+import urllib.parse
 
 app = FastAPI()
 
+# browser-use の実行
 async def search_recipes(conditions: List[str]):
     load_dotenv()
 
@@ -21,6 +23,20 @@ async def search_recipes(conditions: List[str]):
     result = await agent.run()
     return result
 
+# クエリパラメータを条件リストに変換
+def parse_conditions(params):
+    return [
+        f"{params['people']}人分",
+        f"オーブンを{'使用' if params['oven'] else '使用しない'}",
+        f"フライパンで{'調理可能' if params['hotplate'] else '調理しない'}",
+        f"ミキサーを{'使用' if params['mixer'] else '使用しない'}",
+        f"{params['time']}分以内",
+        f"トースターを{'使用' if params['toaster'] else '使用しない'}",
+        f"圧力鍋を{'使用' if params['pressurecooker'] else '使用しない'}",
+        urllib.parse.unquote(params['selected'])
+    ]
+
+# apiの立ち上げ
 @app.get("/api-endpoint")
 async def get_urls(
     people: int,
@@ -32,17 +48,19 @@ async def get_urls(
     pressurecooker: bool,
     selected: str
 ):
-    # クエリパラメータを条件リストに変換
-    conditions = [
-        f"{people}人分",
-        f"オーブンを{'使用' if oven else '使用しない'}",
-        f"フライパンで{'調理可能' if hotplate else '調理しない'}",
-        f"ミキサーを{'使用' if mixer else '使用しない'}",
-        f"{time}分以内",
-        f"トースターを{'使用' if toaster else '使用しない'}",
-        f"圧力鍋を{'使用' if pressurecooker else '使用しない'}",
-        selected
-    ]
+
+    params = {
+        "people": people,
+        "oven": oven,
+        "hotplate": hotplate,
+        "mixer": mixer,
+        "time": time,
+        "toaster": toaster,
+        "pressurecooker": pressurecooker,
+        "selected": selected
+    }
+
+    conditions = parse_conditions(params)
 
     # 非同期処理で検索を実行
     result = await search_recipes(conditions)
