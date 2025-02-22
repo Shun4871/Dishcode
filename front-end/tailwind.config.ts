@@ -60,27 +60,27 @@ export default {
 		// あやが追加した部分　ローディングのアニメーション
 		keyframes: {
 			openLid: {
-			  "0%, 100%": { transform: "translateY(0) rotate(0)" },
-			  "20%": { transform: "translateY(-18px) rotate(-15deg)" }, /* 強めの動き */
-			  "50%": { transform: "translateY(-14px) rotate(-10deg)" },
-			  "80%": { transform: "translateY(-10px) rotate(-5deg)" },
+				"0%, 100%": { transform: "translateY(0) rotate(0)" },
+				"25%": { transform: "translateY(-10px) rotate(-5deg)" },
+				"50%": { transform: "translateY(-15px) rotate(-10deg)" },
+				"75%": { transform: "translateY(-10px) rotate(-5deg)" },
 			},
 			spinPot: {
-			  "0%, 100%": { transform: "rotate(0)" },
-			  "20%": { transform: "rotate(20deg)" }, /* 強めの動き */
-			  "50%": { transform: "rotate(15deg)" },
-			  "80%": { transform: "rotate(8deg)" },
+				"0%, 100%": { transform: "rotate(0)" },
+				"25%": { transform: "rotate(8deg)" },
+				"50%": { transform: "rotate(12deg)" },
+				"75%": { transform: "rotate(8deg)" },
 			},
 			dots: {
-			  "0%": { content: '"."' },
-			  "25%": { content: '".."'},
-			  "50%": { content: '"..."' },
-			  "75%": { content: '""' }, /* ドットを消してリズムを作る */
+				"0%": { content: '"."' },
+				"25%": { content: '".."'},
+				"50%": { content: '"..."' },
+				"75%": { content: '""' }, /* ドットを消してリズムを作る */
 			},
-		  },
+		},
 		  animation: {
-			openLid: "openLid 1.2s ease-in-out infinite",
-			spinPot: "spinPot 1.2s ease-in-out infinite",
+			openLid: "openLid 1.5s cubic-bezier(0.42, 0, 0.58, 1) infinite",
+        	spinPot: "spinPot 1.5s cubic-bezier(0.42, 0, 0.58, 1) infinite",
 			dots: "dots 1.2s steps(4) infinite",
 		  },
 		},
