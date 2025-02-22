@@ -3,24 +3,33 @@ from fastapi.responses import JSONResponse
 from typing import List
 from langchain_openai import ChatOpenAI
 from browser_use import Agent
+from browser_use.browser.browser import Browser, BrowserConfig
 from dotenv import load_dotenv
 import asyncio
 import urllib.parse
 
 app = FastAPI()
 
+browser = Browser(
+	config=BrowserConfig(
+		headless=True,
+	)
+)
+
 # browser-use の実行
 async def search_recipes(conditions: List[str]):
     load_dotenv()
 
-    prompt = f'以下の条件に合う日本語のレシピを3つ検索し、URLを教えてください。回答はjson形式で、{{"url1":"link","url2":"link","url3":"link"}}\\の形にしてください。\n\n' + '\n'.join(f'- {condition}' for condition in conditions)
+    task = f'以下の条件に合う日本語のレシピを3つ検索し、URLを教えてください。回答はjson形式で、{{"url1":"link","url2":"link","url3":"link"}}\\のみにしてください。\n\n' + '\n'.join(f'- {condition}' for condition in conditions)
 
     agent = Agent(
-        task=prompt,
+        task=task,
         llm=ChatOpenAI(model="gpt-4o"),
+		browser=browser,
     )
 
-    result = await agent.run()
+    history = await agent.run(max_steps=3)
+    result = history.final_result()
     return result
 
 # クエリパラメータを条件リストに変換
