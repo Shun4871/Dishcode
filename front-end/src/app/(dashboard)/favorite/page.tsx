@@ -1,4 +1,4 @@
-import UrlWindow from "@/components/ui/UrlWindow"; // パスはプロジェクト構造に合わせる
+import { UrlWindow } from "@/components/ui/UrlWindow";// パスはプロジェクト構造に合わせる
 
 const recipeData = [
   {
@@ -18,7 +18,7 @@ const recipeData = [
   },
 ];
 
-export default function Home() {
+export default function Page() {
   return (
     <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
       <h1 className="text-2xl font-bold mb-4">お気に入りレシピ</h1>
