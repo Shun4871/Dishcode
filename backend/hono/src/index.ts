@@ -74,6 +74,17 @@ app.get('/', (c) => {
                 status: 200
             })
         }
+
+        if (evt.type === 'user.deleted') {
+            await prisma.user.delete({
+                where: {
+                    clerk_id: evt.data.id,
+                }
+            })
+            return c.json({ message: 'User deleted successfully' }, {
+                status: 200
+            })
+        }
         return c.json({ message: 'Error: Invalid event type' }, {
             status: 400
         })
