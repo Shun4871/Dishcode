@@ -55,8 +55,36 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
-  	}
+  		},
+
+		// あやが追加した部分　ローディングのアニメーション
+		keyframes: {
+			openLid: {
+			  "0%, 100%": { transform: "translateY(0) rotate(0)" },
+			  "20%": { transform: "translateY(-18px) rotate(-15deg)" }, /* 強めの動き */
+			  "50%": { transform: "translateY(-14px) rotate(-10deg)" },
+			  "80%": { transform: "translateY(-10px) rotate(-5deg)" },
+			},
+			spinPot: {
+			  "0%, 100%": { transform: "rotate(0)" },
+			  "20%": { transform: "rotate(20deg)" }, /* 強めの動き */
+			  "50%": { transform: "rotate(15deg)" },
+			  "80%": { transform: "rotate(8deg)" },
+			},
+			dots: {
+			  "0%": { content: '"."' },
+			  "25%": { content: '".."'},
+			  "50%": { content: '"..."' },
+			  "75%": { content: '""' }, /* ドットを消してリズムを作る */
+			},
+		  },
+		  animation: {
+			openLid: "openLid 1.2s ease-in-out infinite",
+			spinPot: "spinPot 1.2s ease-in-out infinite",
+			dots: "dots 1.2s steps(4) infinite",
+		  },
+		},
+		
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
