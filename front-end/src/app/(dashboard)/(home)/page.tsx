@@ -36,23 +36,23 @@ export default function Page() {
   
     console.log("GET Request Params:", params.toString());
   
-    // try {
-    //   const res = await fetch(`http://localhost:8000?${params.toString()}`, {
-    //     method: "GET",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
+    try {
+      const res = await fetch(`http://localhost:8000/recipe?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
   
-    //   if (!res.ok) {
-    //     throw new Error(`HTTP error! Status: ${res.status}`);
-    //   }
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
   
-    //   const data = await res.json();
-    //   console.log("Response:", data);
-    // } catch (error) {
-    //   console.error("Fetch error:", error);
-    // }
+      const data = await res.json();
+      console.log("Response:", data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
   };
   
   
