@@ -26,17 +26,13 @@ export default function Page() {
 
   const handleItemSelect = async (itemDisplay: string) => {
     const updatedRequestData = {
-      ...kitchenState, // KitchenStack の情報を含める
-      selected: encodeURIComponent(itemDisplay), // 日本語をエンコード
+      ...kitchenState,
+      selected: itemDisplay, // ここでエンコードは不要（URLSearchParamsが自動でやってくれる）
     };
   
     const params = new URLSearchParams();
     Object.entries(updatedRequestData).forEach(([key, value]) => {
-      if (typeof value === "boolean") {
-        params.append(key, value ? "true" : "false"); // boolean を適切に変換
-      } else {
-        params.append(key, String(value)); // 文字列として追加
-      }
+      params.append(key, String(value)); // value を文字列にして key=value 形式を確保
     });
   
     console.log("GET Request Params:", params.toString());

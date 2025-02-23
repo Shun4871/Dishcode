@@ -47,7 +47,7 @@ async def search_recipes(conditions: List[str]):
 
     agent = Agent(
         task=task,
-        llm=ChatOpenAI(model="gpt-4o"),
+        llm=ChatOpenAI(model="gpt-4o-mmini"),
         browser=browser,
     )
 
