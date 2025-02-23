@@ -51,7 +51,7 @@ async def search_recipes(conditions: List[str]):
         browser=browser,
     )
 
-    history = await agent.run(max_steps=5)
+    history = await agent.run(max_steps=3)
     result = history.final_result()
     return result
 

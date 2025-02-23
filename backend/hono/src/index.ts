@@ -167,83 +167,89 @@ app.use('*', cors({ origin: 'http://localhost:3000' }))
         }
     })
 
-    //Pythonサーバー(port:8000)をvalueそのままで叩く
-    // app.get("/recipe", async (c) => {
-    //     try {
-    //         // クエリパラメータを取得
-    //         const queryParams = c.req.query();
-    
-    //         // 転送先のURL
-    //         const targetServerUrl = "http://0.0.0.0:8000/api-endpoint";
-    
-    //         // タイムアウト設定（例：30秒）
-    //         const TIMEOUT_MS = 30000;
-    //         const controller = new AbortController();
-    //         const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    
-    //         try {
-    //             // 転送リクエストを送信
-    //             const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-    //                 method: 'GET',
-    //                 signal: controller.signal,
-    //             });
-    
-    //             clearTimeout(timeout); // 正常にレスポンスを受け取ったらタイムアウト解除
-    
-    //             // レスポンスのステータスとボディをログに出力
-    //             console.log(`Response status: ${response.status}`);
-    //             const responseData = await response.json();
-    //             console.log("Response body:", responseData);
-    
-    //             // HTTPステータスコードのチェック
-    //             if (!response.ok) {
-    //                 return c.json({ error: "Failed to fetch data from target server" }, 500);
-    //             }
-    
-    //             // `result` フィールドをパース（JSON文字列なのでオブジェクトに戻す）
-    //             let parsedResult;
-    //             try {
-    //                 parsedResult = JSON.parse((responseData as { result: string }).result);
-    //             } catch (error) {
-    //                 console.error("Failed to parse response data:", responseData);
-    //                 return c.json({ error: "Failed to parse response data" }, 502);
-    //             }
-    
-    //             // 必須プロパティの存在チェック
-    //             const { url1, url2, url3 } = parsedResult;
-    //             if (!url1 || !url2 || !url3) {
-    //                 console.error("Invalid response format:", parsedResult);
-    //                 return c.json({ error: "Invalid response format from target server" }, 503);
-    //             }
-    
-    //             // 整形してレスポンスを返す
-    //             console.log("Final response:", { url1, url2, url3 });
-    //             return c.json({ url1, url2, url3 });
-    //         } catch (error) {
-    //             if (error instanceof Error && error.name === 'AbortError') {
-    //                 console.error("Request timed out");
-    //                 return c.json({ error: "Request timed out" }, 504);
-    //             }
-    //             const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    //             console.error("Fetch error:", errorMessage);
-    //             return c.json({ error: "Internal server error", details: errorMessage }, 503);
-    //         }
-    //     } catch (error) {
-    //         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    //         console.error("Unexpected server error:", errorMessage);
-    //         return c.json({ error: "Internal server error", details: errorMessage }, 503);
-    //     }
-    // });
-    
-    
-    
-    app.get("/recipe", async (c) => {
-        return c.json({
-        url1: "https://cookpad.com/jp/recipes/17662797",
-        url2: "https://mi-journey.jp/foodie/80782/",
-        url3: "https://delishkitchen.tv/recipes/147726740259602726"
+   // Pythonサーバー(port:8000)をvalueそのままで叩く
+   app.get("/recipe", async (c) => {
+    try {
+        // クエリパラメータを取得
+        const queryParams = c.req.query();
+
+        // 転送先のURL
+        const targetServerUrl = "http://0.0.0.0:8000/api-endpoint";
+
+        // タイムアウト処理を削除して、fetch がタイムアウトしないようにする
+        const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
+            method: 'GET',
         });
-    });
+
+        console.log(`Response status: ${response.status}`);
+        const responseData = await response.json();
+        console.log("Response body:", responseData);
+
+        // HTTPステータスコードのチェック
+        if (!response.ok) {
+            return c.json({ error: "Failed to fetch data from target server" }, 500);
+        }
+
+        // result フィールドの内容をパースする
+        let parsedResult;
+        try {
+            let jsonString = (responseData as { result: string }).result;
+            // Markdown のコードブロック内に JSON が埋め込まれている場合の処理
+            if (jsonString.includes("```json")) {
+                const match = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+                if (match) {
+                    jsonString = match[1];
+                } else {
+                    throw new Error("JSON extraction failed");
+                }
+            }
+            parsedResult = JSON.parse(jsonString);
+        } catch (error) {
+            console.error("Failed to parse response data:", responseData);
+            return c.json({ error: "Failed to parse response data" }, 502);
+        }
+
+        // 必須プロパティの存在チェックと URL 抽出
+        let fullUrl1, fullUrl2, fullUrl3;
+        try {
+            if (parsedResult.url1 && parsedResult.url2 && parsedResult.url3) {
+                // 直接 url1, url2, url3 がある場合
+                fullUrl1 = new URL(parsedResult.url1).href;
+                fullUrl2 = new URL(parsedResult.url2).href;
+                fullUrl3 = new URL(parsedResult.url3).href;
+            } else if (Array.isArray(parsedResult.urls)) {
+                // urls 配列がある場合
+                const urls = parsedResult.urls;
+                fullUrl1 = urls[0] ? new URL(urls[0]).href : "";
+                fullUrl2 = urls[1] ? new URL(urls[1]).href : "";
+                fullUrl3 = urls[2] ? new URL(urls[2]).href : "";
+            } else {
+                console.error("Invalid response format:", parsedResult);
+                return c.json({ error: "Invalid response format from target server" }, 503);
+            }
+        } catch (error) {
+            console.error("Failed to extract URL:", error);
+            return c.json({ error: "Failed to extract URL from response data" }, 502);
+        }
+
+        console.log("Final response:", { url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
+        return c.json({ url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Unexpected server error:", errorMessage);
+        return c.json({ error: "Internal server error", details: errorMessage }, 503);
+    }
+});
+
+
+    
+    // app.get("/recipe", async (c) => {
+    //     return c.json({
+    //     url1: "https://cookpad.com/jp/recipes/17662797",
+    //     url2: "https://mi-journey.jp/foodie/80782/",
+    //     url3: "https://delishkitchen.tv/recipes/147726740259602726"
+    //     });
+    // });
 
 
 export default {
