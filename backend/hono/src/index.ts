@@ -214,9 +214,9 @@ app.use('*', cors({ origin: 'http://localhost:3000' }))
         await new Promise((resolve) => setTimeout(resolve, 10000));
       
         return c.json({
-          url1: "https://cookpad.com/jp/recipes/17662797",
-          url2: "https://mi-journey.jp/foodie/80782/",
-          url3: "https://delishkitchen.tv/recipes/147726740259602726"
+          url1: "https://delishkitchen.tv/recipes/233678306187149791",
+          url2: "https://daidokolog.pal-system.co.jp/recipe/1980",
+          url3: "https://recipe.rakuten.co.jp/recipe/1410014917/"
         });
       });
       
