@@ -74,7 +74,8 @@ const recipeCategories = [
       { display: "鍋料理", value: "hotpot" },
       { display: "麺類", value: "noodle_dish" },
       { display: "野菜料理", value: "vegetable_dish" },
-      { display: "魚介料理", value: "seafood_dish" }
+      { display: "魚介料理", value: "seafood_dish" },
+      { display: "回鍋肉", value: "sweet_sour_pork" },
     ]
   },
   {
