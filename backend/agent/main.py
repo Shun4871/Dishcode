@@ -33,21 +33,10 @@ browser = Browser(
 async def search_recipes(conditions: List[str]):
     load_dotenv()
 
-    task = (
-    '以下の条件に合う日本語のレシピを3つ検索し、各レシピのURLを返してください。'
-    '回答は必ずJSON形式で、以下のフォーマットに従い、他のテキストや説明を一切含まず、'
-    'jsonオブジェクトのみを返してください \n'
-    '{\n'
-    '    "url1": "レシピ1のURL",\n'
-    '    "url2": "レシピ2のURL",\n'
-    '    "url3": "レシピ3のURL"\n'
-    '}\n\n'
-    + '\n'.join(f'- {condition}' for condition in conditions)
-)
-
+    task = f'以下の条件に合う日本語のレシピを3つ検索し、URLを教えてください。回答はjson形式で、{{"url1":"link","url2":"link","url3":"link"}}\\のみにしてください。\n\n' + '\n'.join(f'- {condition}' for condition in conditions)
     agent = Agent(
         task=task,
-        llm=ChatOpenAI(model="gpt-4o-mini"),
+        llm=ChatOpenAI(model="gpt-4o"),
         browser=browser,
     )
 

@@ -170,76 +170,117 @@ app.use('*', cors({ origin: 'http://localhost:3000' }))
    // Pythonサーバー(port:8000)をvalueそのままで叩く
    app.get("/recipe", async (c) => {
     try {
-        // クエリパラメータを取得
-        const queryParams = c.req.query();
-
-        // 転送先のURL
-        const targetServerUrl = "http://0.0.0.0:8000/api-endpoint";
-
-        // タイムアウト処理を削除して、fetch がタイムアウトしないようにする
-        const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-            method: 'GET',
-        });
-
-        console.log(`Response status: ${response.status}`);
-        const responseData = await response.json();
-        console.log("Response body:", responseData);
-
-        // HTTPステータスコードのチェック
-        if (!response.ok) {
-            return c.json({ error: "Failed to fetch data from target server" }, 500);
-        }
-
-        // result フィールドの内容をパースする
-        let parsedResult;
+      // クエリパラメータを取得
+      const queryParams = c.req.query();
+  
+      // 転送先のURL
+      const targetServerUrl = "http://0.0.0.0:8000/api-endpoint";
+  
+      // fetch 時のタイムアウト処理は削除
+      const response = await fetch(
+        `${targetServerUrl}?${new URLSearchParams(queryParams)}`,
+        { method: "GET" }
+      );
+      console.log(`Response status: ${response.status}`);
+  
+      // ストリームからの受信のためのリーダーとテキストデコーダーの準備
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let receivedText = "";
+      let completeRecipeData: any = null;
+  
+      // 最大待機時間 10 分 (600,000ms)
+      const maxWaitTime = 10 * 60 * 100000000;
+      const startTime = Date.now();
+  
+      // 安全に JSON をパースするヘルパー
+      const safeJSONParse = (str: string): any => {
         try {
-            let jsonString = (responseData as { result: string }).result;
-            // Markdown のコードブロック内に JSON が埋め込まれている場合の処理
-            if (jsonString.includes("```json")) {
-                const match = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
-                if (match) {
-                    jsonString = match[1];
-                } else {
-                    throw new Error("JSON extraction failed");
-                }
-            }
-            parsedResult = JSON.parse(jsonString);
+          return JSON.parse(str);
         } catch (error) {
-            console.error("Failed to parse response data:", responseData);
-            return c.json({ error: "Failed to parse response data" }, 502);
+          console.error("JSON parse error for string:", str, error);
+          return null;
         }
-
-        // 必須プロパティの存在チェックと URL 抽出
-        let fullUrl1, fullUrl2, fullUrl3;
-        try {
-            if (parsedResult.url1 && parsedResult.url2 && parsedResult.url3) {
-                // 直接 url1, url2, url3 がある場合
-                fullUrl1 = new URL(parsedResult.url1).href;
-                fullUrl2 = new URL(parsedResult.url2).href;
-                fullUrl3 = new URL(parsedResult.url3).href;
-            } else if (Array.isArray(parsedResult.urls)) {
-                // urls 配列がある場合
-                const urls = parsedResult.urls;
-                fullUrl1 = urls[0] ? new URL(urls[0]).href : "";
-                fullUrl2 = urls[1] ? new URL(urls[1]).href : "";
-                fullUrl3 = urls[2] ? new URL(urls[2]).href : "";
+      };
+  
+      // ストリームからデータを逐次読み込み、Markdown のコードブロック内の JSON を抽出する
+      while (true) {
+        // タイムアウトチェック
+        if (Date.now() - startTime > maxWaitTime) {
+          console.error("Timeout reached after 10 minutes waiting for complete recipe data.");
+          break;
+        }
+  
+        const { done, value } = await reader.read();
+        if (done) break;
+        receivedText += decoder.decode(value, { stream: true });
+  
+        // Markdown の ```json ... ``` ブロックを正規表現で抽出
+        const regex = /```json\s*([\s\S]*?)\s*```/g;
+        let match;
+        while ((match = regex.exec(receivedText)) !== null) {
+          const candidate = match[1].trim();
+          // JSON っぽいかどうかを簡易チェック
+          if (!candidate.startsWith("{") || !candidate.endsWith("}")) {
+            console.log("Skipping candidate that doesn't look like JSON:", candidate);
+            continue;
+          }
+          const parsed = safeJSONParse(candidate);
+          if (parsed) {
+            // 直接 url1,url2,url3 があるか、urls 配列で3つ以上あるかチェック
+            if (
+              (parsed.url1 && parsed.url2 && parsed.url3) ||
+              (Array.isArray(parsed.urls) && parsed.urls.length >= 3)
+            ) {
+              completeRecipeData = parsed;
+              break;
             } else {
-                console.error("Invalid response format:", parsedResult);
-                return c.json({ error: "Invalid response format from target server" }, 503);
+              console.log("Incomplete recipe data found, waiting for additional response:", parsed);
             }
-        } catch (error) {
-            console.error("Failed to extract URL:", error);
-            return c.json({ error: "Failed to extract URL from response data" }, 502);
+          }
         }
-
-        console.log("Final response:", { url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
-        return c.json({ url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
+        if (completeRecipeData) break;
+      }
+  
+      // 完全なレシピデータが取得できなかった場合はエラーログを残す
+      if (!completeRecipeData) {
+        console.error("No complete recipe data (with 3 URLs) was received from target server.");
+        return c.json({ error: "Incomplete recipe data received" }, 503);
+      }
+  
+      // 抽出したデータから URL を整形して取得
+      let fullUrl1, fullUrl2, fullUrl3;
+      try {
+        if (completeRecipeData.url1 && completeRecipeData.url2 && completeRecipeData.url3) {
+          fullUrl1 = new URL(completeRecipeData.url1).href;
+          fullUrl2 = new URL(completeRecipeData.url2).href;
+          fullUrl3 = new URL(completeRecipeData.url3).href;
+        } else if (Array.isArray(completeRecipeData.urls)) {
+          const urls = completeRecipeData.urls;
+          fullUrl1 = urls[0] ? new URL(urls[0]).href : "";
+          fullUrl2 = urls[1] ? new URL(urls[1]).href : "";
+          fullUrl3 = urls[2] ? new URL(urls[2]).href : "";
+        } else {
+          console.error("Invalid recipe format:", completeRecipeData);
+          return c.json({ error: "Invalid recipe format from target server" }, 503);
+        }
+      } catch (error) {
+        console.error("Failed to extract URL:", error);
+        return c.json({ error: "Failed to extract URL from response data" }, 502);
+      }
+  
+      console.log("Hono Final response:", { url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
+      return c.json({ url1: fullUrl1, url2: fullUrl2, url3: fullUrl3 });
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error("Unexpected server error:", errorMessage);
-        return c.json({ error: "Internal server error", details: errorMessage }, 503);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Unexpected server error:", errorMessage);
+      return c.json({ error: "Internal server error", details: errorMessage }, 503);
     }
-});
+  });
+  
 
 
     
