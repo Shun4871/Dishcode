@@ -47,11 +47,11 @@ async def search_recipes(conditions: List[str]):
 
     agent = Agent(
         task=task,
-        llm=ChatOpenAI(model="gpt-4o-mmini"),
+        llm=ChatOpenAI(model="gpt-4o-mini"),
         browser=browser,
     )
 
-    history = await agent.run(max_steps=3)
+    history = await agent.run(max_steps=5)
     result = history.final_result()
     return result
 
