@@ -21,6 +21,7 @@ const ingredientCategories = [
       { display: "夏の旬野菜", value: "summervgetables" },
       { display: "秋冬の旬野菜", value: "autumnwintervegetables" },
       { display: "よく使う野菜", value: "commonvegetables" },
+      { display: "もやし", value: "bean_sprouts" },
       { display: "きのこ", value: "mushrooms" },
       { display: "豆類", value: "beans" },
       { display: "香味野菜", value: "aromaticvegetables" },
