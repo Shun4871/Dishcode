@@ -6,13 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 const kitchenOptions = [
-  { label: "何人暮らし", type: "select", value:"people",
-    options: [
-      { value: "1", label: "1人" },
-      { value: "2", label: "2人" },
-      { value: "3", label: "3人" },
-      { value: "4", label: "4人以上" }
-    ] },
+  { label: "圧力鍋", type: "switch" , value :"pressurecooker"},
   { label: "オーブン", type: "switch" , value :"oven"},
   { label: "ホットプレート", type: "switch", value :"hotplate" },
   { label: "ミキサー", type: "switch" , value :"mixer"},
@@ -24,7 +18,14 @@ const kitchenOptions = [
       { value: "90", label: "90分以上" }
     ] },
   { label: "トースター", type: "switch" , value :"toaster"},
-  { label: "圧力鍋", type: "switch" , value :"pressurecooker"},
+  { label: "何人暮らし", type: "select", value:"people",
+    options: [
+      { value: "1", label: "1人" },
+      { value: "2", label: "2人" },
+      { value: "3", label: "3人" },
+      { value: "4", label: "4人以上" }
+    ] },
+  
 ];
 
 interface KitchenStackProps {
@@ -50,7 +51,7 @@ export function KitchenStack({ kitchenState, setKitchenState }: KitchenStackProp
   };
 
   return (
-    <div className="grid grid-cols-2 gap-8 p-6 border rounded-2xl shadow">
+    <div className="grid grid-cols-2 gap-8 p-6 border rounded-2xl shadow w-100rem">
       {kitchenOptions.map(({ label, type, options, value }) => (
         <div key={label} className="flex items-center justify-between space-y-4">
           <span className="font-bold">{label}</span>

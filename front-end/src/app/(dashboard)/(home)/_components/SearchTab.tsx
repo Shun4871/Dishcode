@@ -21,6 +21,7 @@ const ingredientCategories = [
       { display: "夏の旬野菜", value: "summervgetables" },
       { display: "秋冬の旬野菜", value: "autumnwintervegetables" },
       { display: "よく使う野菜", value: "commonvegetables" },
+      { display: "もやし", value: "bean_sprouts" },
       { display: "きのこ", value: "mushrooms" },
       { display: "豆類", value: "beans" },
       { display: "香味野菜", value: "aromaticvegetables" },
@@ -74,7 +75,8 @@ const recipeCategories = [
       { display: "鍋料理", value: "hotpot" },
       { display: "麺類", value: "noodle_dish" },
       { display: "野菜料理", value: "vegetable_dish" },
-      { display: "魚介料理", value: "seafood_dish" }
+      { display: "魚介料理", value: "seafood_dish" },
+      { display: "回鍋肉", value: "sweet_sour_pork" },
     ]
   },
   {
