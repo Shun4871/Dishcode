@@ -203,48 +203,48 @@ app.post('/search', async (c) => {
         }
     })
 
-    //Pythonサーバー(port:8000)をvalueそのままで叩く
-    app.get("/recipe", async (c) => {
-        try {
-            // クエリパラメータを取得
-            const queryParams = c.req.query()
+    // //Pythonサーバー(port:8000)をvalueそのままで叩く
+    // app.get("/recipe", async (c) => {
+    //     try {
+    //         // クエリパラメータを取得
+    //         const queryParams = c.req.query()
     
-            // 転送先のURL（適宜変更）
-            const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
+    //         // 転送先のURL（適宜変更）
+    //         const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
     
-            // 転送リクエストを送信
-            const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-                method: 'GET',
-            })
+    //         // 転送リクエストを送信
+    //         const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
+    //             method: 'GET',
+    //         })
     
-            // HTTPステータスコードのチェック
-            if (!response.ok) {
-                return c.json({ error: "Failed to fetch data from target server" }, 500)
-            }
+    //         // HTTPステータスコードのチェック
+    //         if (!response.ok) {
+    //             return c.json({ error: "Failed to fetch data from target server" }, 500)
+    //         }
     
-            // JSONデータとしてレスポンスを取得
-            const data: unknown = await response.json()
+    //         // JSONデータとしてレスポンスを取得
+    //         const data: unknown = await response.json()
     
-            // nullチェック
-            if (data === null || typeof data !== "object") {
-                return c.json({ error: "Invalid response format from target server" }, 501)
-            }
+    //         // nullチェック
+    //         if (data === null || typeof data !== "object") {
+    //             return c.json({ error: "Invalid response format from target server" }, 501)
+    //         }
     
-            // `data` を型アサーション
-            const responseData = data as { url1?: string; url2?: string; url3?: string }
+    //         // `data` を型アサーション
+    //         const responseData = data as { url1?: string; url2?: string; url3?: string }
     
-            // 必須プロパティの存在チェック
-            if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
-                return c.json({ error: "Invalid response format from target server" }, 502)
-            }
+    //         // 必須プロパティの存在チェック
+    //         if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
+    //             return c.json({ error: "Invalid response format from target server" }, 502)
+    //         }
     
-            return c.json(responseData)
-        } catch (error) {
-            // `error` が unknown 型にならないように処理
-            const errorMessage = error instanceof Error ? error.message : "Unknown error"
-            return c.json({ error: "Internal server error", details: errorMessage }, 503)
-        }
-    })
+    //         return c.json(responseData)
+    //     } catch (error) {
+    //         // `error` が unknown 型にならないように処理
+    //         const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    //         return c.json({ error: "Internal server error", details: errorMessage }, 503)
+    //     }
+    // })
 
 
 
