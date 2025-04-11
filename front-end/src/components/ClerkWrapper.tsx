@@ -1,13 +1,21 @@
 "use client";
 
 import { ClerkProvider } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 export default function ClerkWrapper({ children }: { children: React.ReactNode }) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const [key, setKey] = useState<string | null>(null);
 
-  if (!publishableKey) {
-    throw new Error("ClerkのpublishableKeyが設定されていません。");
-  }
+  useEffect(() => {
+    fetch("/config.json")
+      .then((res) => res.json())
+      .then((data) => setKey(data.clerkPublishableKey))
+      .catch((err) => {
+        console.error("Clerkのキーの読み込みに失敗", err);
+      });
+  }, []);
 
-  return <ClerkProvider publishableKey={publishableKey}>{children}</ClerkProvider>;
+  if (!key) return null; // ローディング画面でも可
+
+  return <ClerkProvider publishableKey={key}>{children}</ClerkProvider>;
 }
