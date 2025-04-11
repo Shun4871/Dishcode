@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import Header from "@/components/header";
-import ClerkWrapper from "@/components/ClerkWrapper"; // 追加
+import ClerkWrapper from "@/components/ClerkWrapper";
 
 export const metadata: Metadata = {
   title: "Dhiscode",
@@ -14,13 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkWrapper>
-      <html lang="ja">
-        <body className="flex flex-col min-h-screen">
+    <html lang="ja">
+      <body className="flex flex-col min-h-screen">
+        <ClerkWrapper>
           <Header />
           <main className="my-16 flex-1">{children}</main>
-        </body>
-      </html>
-    </ClerkWrapper>
+        </ClerkWrapper>
+      </body>
+    </html>
   );
 }
