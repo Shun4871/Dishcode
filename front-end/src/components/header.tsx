@@ -52,7 +52,7 @@ const Header = () => {
           <button onClick={() => setMenuOpen(!menuOpen)} className="h-8 w-10">
             <Image src="/menu.svg" alt="menu" width={40} height={40} />
           </button>
-        </div>
+        </div> 
 
         {/* ログアウトボタン */}
         {isSignedIn && (
