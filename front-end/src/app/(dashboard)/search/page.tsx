@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UrlWindow } from "@/components/ui/UrlWindow";
+import { UrlWindow } from "@/components/ui/urlWindow";
 
 type Recipe = {
   title: string;

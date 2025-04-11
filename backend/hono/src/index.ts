@@ -1,10 +1,14 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
+
+
 const app = new Hono()
 
+app.use('*', cors());
+
 app.get('/', (c) => {
-  return c.text('Hello Hono!')
+  return c.text('Hello DishCode!')
 })
 
 app.get("/recipe", async (c) => {
@@ -50,7 +54,7 @@ app.get("/recipe", async (c) => {
 })
 
 app.post('/search', async (c) => {
-  // クライアントから JSON ボディで { url: string } を受け取る
+  // クライアントから JSON ボディで { "url": string } を受け取る
   const data = await c.req.json();
   const { url } = data;
 
