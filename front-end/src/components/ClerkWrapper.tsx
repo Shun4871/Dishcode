@@ -4,18 +4,25 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 export default function ClerkWrapper({ children }: { children: React.ReactNode }) {
-  const [key, setKey] = useState<string | null>(null);
+  const [publishableKey, setKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/config.json")
       .then((res) => res.json())
-      .then((data) => setKey(data.clerkPublishableKey))
+      .then((data) => {
+        if (!data.clerkPublishableKey) {
+          throw new Error("config.json に clerkPublishableKey が見つかりません");
+        }
+        setKey(data.clerkPublishableKey);
+      })
       .catch((err) => {
-        console.error("Clerkのキーの読み込みに失敗", err);
+        console.error("config.json 読み込みエラー: ", err);
       });
   }, []);
 
-  if (!key) return null; // ローディング画面でも可
+  if (!publishableKey) {
+    return <div>Loading Clerk...</div>;
+  }
 
-  return <ClerkProvider publishableKey={key}>{children}</ClerkProvider>;
+  return <ClerkProvider publishableKey={publishableKey}>{children}</ClerkProvider>;
 }
