@@ -20,7 +20,7 @@ export default function Page() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:8080/search", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

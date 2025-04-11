@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation"; 
+
+
 import { KitchenStack, Kitchen } from "./_components/KitchenStack";
 import { SearchTab } from "./_components/SearchTab";
 import { Flex } from "@/components/ui/flex";
@@ -43,7 +45,7 @@ export default function Page() {
   
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8080/recipe?${params.toString()}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/recipe?${params.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

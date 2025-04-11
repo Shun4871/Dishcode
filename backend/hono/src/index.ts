@@ -2,7 +2,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { WebhookEvent } from '@clerk/backend'
 import { Webhook } from 'svix'
@@ -25,10 +25,12 @@ app.use('*', cors({ origin: 'http://localhost:3000' }))
 app.use('*', async (c, next) => {
     c.header('Access-Control-Allow-Origin', '*');
     c.header('Access-Control-Allow-Headers', '*');
+    console.log(`[Request] ${c.req.method} ${c.req.url}`);
+  await next();
     await next();
   });
 
-    app.post("/webhook/clerk", clerkMiddleware(), (c) => {
+app.post("/webhook/clerk", clerkMiddleware(), (c) => {
         const SIGNING_SECRET = process.env.SIGNING_SECRET
 
         if (!SIGNING_SECRET) {
@@ -87,35 +89,7 @@ app.use('*', async (c, next) => {
         })
     })
 
-    // POST /search エンドポイント
-app.post('/search', async (c) => {
-    // クライアントから JSON ボディで { url: string } を受け取る
-    const data = await c.req.json();
-    const { url } = data;
-  
-    if (!url) {
-      return c.json({ error: 'URL が必要です' }, 400);
-    }
-  
-    try {
-      // URL の HTML を取得
-      const res = await fetch(url);
-      const html = await res.text();
-  
-      // <title> タグからタイトル抽出
-      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-      const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
-  
-      // <meta property="og:image"> タグから画像URL抽出
-      const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
-      const image = ogImageMatch ? ogImageMatch[1].trim() : "";
-  
-      return c.json({ title, image, url });
-    } catch (error: any) {
-      console.error(`Error fetching metadata for ${url}:`, error);
-      return c.json({ title: "タイトル取得エラー", image: "", error: error.message }, 500);
-    }
-  });
+
 
     //Userのお気に入りを押した時の処理
     app.post('/favorite', async (c) => {
@@ -204,61 +178,91 @@ app.post('/search', async (c) => {
     })
 
     // //Pythonサーバー(port:8000)をvalueそのままで叩く
-    // app.get("/recipe", async (c) => {
-    //     try {
-    //         // クエリパラメータを取得
-    //         const queryParams = c.req.query()
-    
-    //         // 転送先のURL（適宜変更）
-    //         const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
-    
-    //         // 転送リクエストを送信
-    //         const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-    //             method: 'GET',
-    //         })
-    
-    //         // HTTPステータスコードのチェック
-    //         if (!response.ok) {
-    //             return c.json({ error: "Failed to fetch data from target server" }, 500)
-    //         }
-    
-    //         // JSONデータとしてレスポンスを取得
-    //         const data: unknown = await response.json()
-    
-    //         // nullチェック
-    //         if (data === null || typeof data !== "object") {
-    //             return c.json({ error: "Invalid response format from target server" }, 501)
-    //         }
-    
-    //         // `data` を型アサーション
-    //         const responseData = data as { url1?: string; url2?: string; url3?: string }
-    
-    //         // 必須プロパティの存在チェック
-    //         if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
-    //             return c.json({ error: "Invalid response format from target server" }, 502)
-    //         }
-    
-    //         return c.json(responseData)
-    //     } catch (error) {
-    //         // `error` が unknown 型にならないように処理
-    //         const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    //         return c.json({ error: "Internal server error", details: errorMessage }, 503)
-    //     }
-    // })
-
-
-
-    //モック
     app.get("/recipe", async (c) => {
-        // 10秒待つ
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+        try {
+            // クエリパラメータを取得
+            const queryParams = c.req.query()
+    
+            // 転送先のURL（適宜変更）
+            const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
+    
+            // 転送リクエストを送信
+            const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
+                method: 'GET',
+            })
+    
+            // HTTPステータスコードのチェック
+            if (!response.ok) {
+                return c.json({ error: "Failed to fetch data from target server" }, 500)
+            }
+    
+            // JSONデータとしてレスポンスを取得
+            const data: unknown = await response.json()
+    
+            // nullチェック
+            if (data === null || typeof data !== "object") {
+                return c.json({ error: "Invalid response format from target server" }, 501)
+            }
+    
+            // `data` を型アサーション
+            const responseData = data as { url1?: string; url2?: string; url3?: string }
+    
+            // 必須プロパティの存在チェック
+            if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
+                return c.json({ error: "Invalid response format from target server" }, 502)
+            }
+    
+            return c.json(responseData)
+        } catch (error) {
+            // `error` が unknown 型にならないように処理
+            const errorMessage = error instanceof Error ? error.message : "Unknown error"
+            return c.json({ error: "Internal server error", details: errorMessage }, 503)
+        }
+    })
+
+
+
+    // //モック
+    // app.get("/recipe", async (c) => {
+    //     // 10秒待つ
+    //     await new Promise((resolve) => setTimeout(resolve, 10000));
       
-        return c.json({
-          url1: "https://delishkitchen.tv/recipes/233678306187149791",
-          url2: "https://daidokolog.pal-system.co.jp/recipe/1980",
-          url3: "https://recipe.rakuten.co.jp/recipe/1410014917/"
-        });
-      });
+    //     return c.json({
+    //       url1: "https://delishkitchen.tv/recipes/233678306187149791",
+    //       url2: "https://daidokolog.pal-system.co.jp/recipe/1980",
+    //       url3: "https://recipe.rakuten.co.jp/recipe/1410014917/"
+    //     });
+    //   });
+
+// POST /search エンドポイント
+app.post('/search', async (c) => {
+    // クライアントから JSON ボディで { url: string } を受け取る
+    const data = await c.req.json();
+    const { url } = data;
+  
+    if (!url) {
+      return c.json({ error: 'URL が必要です' }, 400);
+    }
+  
+    try {
+      // URL の HTML を取得
+      const res = await fetch(url);
+      const html = await res.text();
+  
+      // <title> タグからタイトル抽出
+      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
+  
+      // <meta property="og:image"> タグから画像URL抽出
+      const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
+      const image = ogImageMatch ? ogImageMatch[1].trim() : "";
+  
+      return c.json({ title, image, url });
+    } catch (error: any) {
+      console.error(`Error fetching metadata for ${url}:`, error);
+      return c.json({ title: "タイトル取得エラー", image: "", error: error.message }, 500);
+    }
+  });
       
 
 
