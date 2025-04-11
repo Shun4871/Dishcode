@@ -1,4 +1,4 @@
-import { UrlWindow } from "@/components/ui/UrlWindow";
+import { UrlWindow } from "@/components/ui/urlWindow";
 
 interface RecipeItem {
   title: string;
