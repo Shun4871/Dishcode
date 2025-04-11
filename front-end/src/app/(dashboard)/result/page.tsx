@@ -27,11 +27,15 @@ async function fetchMetadata(url: string): Promise<{ title: string; image: strin
   }
 }
 
-interface ResultPageProps {
-  searchParams: {
-    [key: string]: string | string[] | undefined;
-  };
-}
+// interface ResultPageProps {
+//   searchParams: {
+//     [key: string]: string | string[] | undefined;
+//   };
+// }
+
+type ResultPageProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export default async function ResultPage({ searchParams }: ResultPageProps) {
   // クエリパラメータから各 URL を文字列として取得
