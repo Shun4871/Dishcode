@@ -1,15 +1,45 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
+import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
+import { drizzle } from 'drizzle-orm/d1';
+import { user } from './db/schema';
 
 
-const app = new Hono()
+
+
+type Bindings = {
+  DB: D1Database;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
+
 
 app.use('*', cors());
 
 app.get('/', (c) => {
   return c.text('Hello DishCode!')
 })
+
+app.use('*', clerkMiddleware())
+
+// ログイン確認API
+app.get('/', (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: 'Not logged in' }, 401);
+  }
+  return c.json({ message: 'Logged in', userId: auth.userId });
+});
+
+// 全ユーザー取得
+app.get('/users', async (c) => {
+  const db = drizzle(c.env.DB);
+  const users = await db.select().from(user).all();
+  return c.json(users);
+});
+
+
 
 app.get("/recipe", async (c) => {
   try {
