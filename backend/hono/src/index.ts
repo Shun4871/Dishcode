@@ -5,6 +5,8 @@ import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { drizzle } from 'drizzle-orm/d1';
 import { user } from './db/schema';
 
+import webhookRoutes from './routes/webhooks'
+
 
 
 
@@ -23,8 +25,11 @@ app.get('/', (c) => {
 
 app.use('*', clerkMiddleware())
 
+// 👇 Webhookルートを `/webhooks` にマウント
+app.route('/webhooks', webhookRoutes)
+
 // ログイン確認API
-app.get('/', (c) => {
+app.get('/login', (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ message: 'Not logged in' }, 401);
