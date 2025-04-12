@@ -10,9 +10,7 @@ export default function ClerkWrapper({ children }: { children: React.ReactNode }
     return <div>Clerkの設定エラー</div>;
   }
 
-  return (
-    <ClerkProvider publishableKey={publishableKey}>
-      {children}
-    </ClerkProvider>
-  );
+  return <ClerkProvider publishableKey={publishableKey}>
+    {children}
+  </ClerkProvider>;
 }
