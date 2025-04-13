@@ -5,4 +5,4 @@ export default function NotFound() {
         <p className="text-lg">お探しのページは存在しないか、移動された可能性があります。</p>
       </div>
     );
-  }
+  } 
