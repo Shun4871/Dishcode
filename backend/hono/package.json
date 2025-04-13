@@ -1,18 +1,27 @@
 {
   "name": "hono",
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
-    "deploy": "wrangler deploy --minify"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "build": "next build",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "generate": "drizzle-kit generate",
+    "local:migration": "wrangler d1 migrations apply dishcode --local",
+    "remote:migration": "wrangler d1 migrations apply dishcode --remote"
   },
   "dependencies": {
-    "@clerk/backend": "^1.24.1",
+    "@clerk/backend": "^1.27.3",
     "@hono/clerk-auth": "^2.0.0",
-    "@prisma/client": "^6.3.1",
-    "hono": "^4.7.1",
-    "svix": "^1.59.1"
+    "drizzle-kit": "^0.30.6",
+    "drizzle-orm": "^0.41.0",
+    "hono": "^4.7.6",
+    "svix": "^1.64.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0",
-    "wrangler": "^3.101.0"
+    "@cloudflare/workers-types": "^4.20250214.0",
+    "wrangler": "^4.4.0"
   }
 }

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1744455048647,
+      "tag": "0000_shocking_omega_red",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1744456951041,
+      "tag": "0001_amazing_thunderbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1744463351229,
+      "tag": "0002_fresh_war_machine",
+      "breakpoints": true
+    }
+  ]
+}
