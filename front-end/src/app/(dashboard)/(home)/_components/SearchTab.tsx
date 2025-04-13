@@ -136,40 +136,7 @@ export function SearchTab({ onItemSelect }: SearchTabProps) {
           </TabsContent>
         ))
       }
-      {/* <TabsContent value="ingredients" className="h-full">
-        <div className="grid grid-cols-2 gap-8">
-          {ingredientCategories.map(({ title, items }) => (
-            <div key={title} className="mb-4">
-              <h3 className="font-bold mb-2">{title}</h3>
-              <ul className="grid grid-cols-3 gap-2">
-                {items.map(item => (
-                  <li key={item.value} className="flex items-center space-x-1 cursor-pointer" onClick={() => onItemSelect(item.display)}>
-                    <ChevronRight size={16} />
-                    <span>{item.display}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </TabsContent>
-      <TabsContent value="recipes" className="h-full">
-        <div className="grid grid-cols-2 gap-8">
-          {recipeCategories.map(({ title, items }) => (
-            <div key={title} className="mb-4">
-              <h3 className="font-bold mb-2">{title}</h3>
-              <ul className="grid grid-cols-3 gap-2">
-                {items.map(item => (
-                  <li key={item.value} className="flex items-center space-x-1 cursor-pointer" onClick={() => onItemSelect(item.display)}>
-                    <ChevronRight size={16} />
-                    <span>{item.display}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </TabsContent> */}
+      
     </Tabs>
   );
 }
