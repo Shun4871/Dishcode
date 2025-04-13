@@ -1,44 +1,32 @@
 import { UrlWindow } from "@/components/ui/urlWindow";
 
-// レシピのURLリスト（ここにURLを追加）
 const urls = [
   "https://cookpad.com/jp/recipes/17662797",
   "https://mi-journey.jp/foodie/80782/",
   "https://delishkitchen.tv/recipes/233678306187149791",
   "https://www.kikkoman.co.jp/homecook/search/recipe/00055074/",
-
 ];
 
-// 指定のURLのHTMLからタイトルとog:imageを抽出する関数
-async function fetchMetadata(url: string): Promise<{ title: string; image: string }> {
-  try {
-    const res = await fetch(url);
-    const html = await res.text();
+async function getMetadata(urls: string[]) {
+  const params = new URLSearchParams();
+  urls.forEach((url) => params.append("url", url));
 
-    // <title> タグからタイトルを抽出
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/metadata?${params.toString()}`, {
+    cache: "no-store", // 必要ならキャッシュ無効化
+  });
 
-    // <meta property="og:image" ...> タグから画像URLを抽出
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
-    const image = ogImageMatch ? ogImageMatch[1].trim() : ""; // 画像が取得できなければ空文字
-
-    return { title, image };
-  } catch (error) {
-    console.error(`Error fetching metadata for ${url}:`, error);
-    return { title: "タイトル取得エラー", image: "" };
+  if (!res.ok) {
+    console.error("Failed to fetch metadata");
+    return [];
   }
+
+  const data = await res.json();
+  return data;
 }
 
-// ページコンポーネント
-export default async function Page() {
-  // 各URLからmetadataを取得し、レシピアイテムを生成
-  const items = await Promise.all(
-    urls.map(async (url) => {
-      const { title, image } = await fetchMetadata(url);
-      return { title, image, url };
-    })
-  );
+export default async function Favorite() {
+  const items = await getMetadata(urls);
+
   return (
     <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
       <h1 className="text-2xl font-bold mb-4">おすすめレシピ</h1>

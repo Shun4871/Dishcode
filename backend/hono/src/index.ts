@@ -8,6 +8,7 @@ import { user } from './db/schema';
 import { favorite } from './db/schema';
 
 import webhookRoutes from './routes/webhooks'
+import metadataRoute from './routes/metadata';
 
 
 
@@ -231,6 +232,18 @@ app.get("/recipe", async (c) => {
       return c.json({ error: "Internal server error", details: errorMessage }, 503)
   }
 })
+
+
+app.get('/recipe-test', async (c) => {
+  const url1 = "https://delishkitchen.tv/recipes/233678306187149791";
+  const url2 = "https://delishkitchen.tv/recipes/398816650859643387";
+  const url3 = "https://recipe.rakuten.co.jp/recipe/1410014917/";
+
+  return c.json({ url1, url2, url3 });
+}
+);
+
+app.route('/', metadataRoute);
 
 app.post('/search', async (c) => {
   // クライアントから JSON ボディで { "url": string } を受け取る

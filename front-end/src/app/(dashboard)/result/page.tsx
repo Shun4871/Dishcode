@@ -10,44 +10,49 @@ interface RecipeItem {
   url: string;
 }
 
-// メタデータを取得する関数
-async function fetchMetadata(url: string): Promise<{ title: string; image: string }> {
-  try {
-    const res = await fetch(url);
-    const html = await res.text();
-
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
-
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
-    const image = ogImageMatch ? ogImageMatch[1].trim() : "";
-
-    return { title, image };
-  } catch (error) {
-    console.error(`Error fetching metadata for ${url}:`, error);
-    return { title: "タイトル取得エラー", image: "" };
-  }
-}
-
 export default function ResultPage() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<RecipeItem[]>([]);
 
-  // クエリから url を取り出す（あなたの希望の形で）
-  const url1 = typeof searchParams.get("url1") === "string" ? searchParams.get("url1") : undefined;
-  const url2 = typeof searchParams.get("url2") === "string" ? searchParams.get("url2") : undefined;
-  const url3 = typeof searchParams.get("url3") === "string" ? searchParams.get("url3") : undefined;
+  const url1 = searchParams.get("url1") || undefined;
+  const url2 = searchParams.get("url2") || undefined;
+  const url3 = searchParams.get("url3") || undefined;
+
+  // バックエンドAPI経由でメタ情報を取得
+  const fetchAllMetadata = async (urls: string[]): Promise<RecipeItem[]> => {
+    const query = urls.map((url) => `url=${encodeURIComponent(url)}`).join("&");
+    try {
+      console.log("APIに送信するURL:", `${process.env.NEXT_PUBLIC_API_BASE_URL || ""}/metadata?${query}`);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || ""}/metadata?${query}`);
+      if (!res.ok) throw new Error("Failed to fetch metadata");
+
+      const data = await res.json();
+      console.log("APIレスポンス:", data);
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+      return urls.map((url) => ({
+        title: "取得エラー",
+        image: "",
+        url,
+      }));
+    }
+  };
+
+  console.log("url1:", url1);
+console.log("url2:", url2);
+console.log("url3:", url3);
+
 
   useEffect(() => {
+    
+
     const urls: string[] = [url1, url2, url3].filter((url): url is string => !!url);
 
     const fetchAll = async () => {
-      const results = await Promise.all(
-        urls.map(async (url) => {
-          const { title, image } = await fetchMetadata(url);
-          return { title, image, url };
-        })
-      );
+      const results = await fetchAllMetadata(urls);
       setItems(results);
     };
 
@@ -61,7 +66,7 @@ export default function ResultPage() {
       <h1 className="text-2xl font-bold mb-4">おすすめレシピ</h1>
       <UrlWindow recipes={items} />
       <button
-        onClick={() => window.location.href = "/"}
+        onClick={() => (window.location.href = "/")}
         className="w-60 h-20 bg-[#DD9004] text-3xl text-white rounded-2xl mb-12"
       >
         もう一回

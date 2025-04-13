@@ -45,7 +45,7 @@ export default function Page() {
   
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/recipe?${params.toString()}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/recipe-test?${params.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
