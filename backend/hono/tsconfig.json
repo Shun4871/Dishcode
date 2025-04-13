@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "target": "ES2016",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "strict": true,
     "skipLibCheck": true,
     "lib": [
       "ESNext"
     ],
     "types": [
+      "node",
       "@cloudflare/workers-types/2023-07-01"
     ],
     "jsx": "react-jsx",

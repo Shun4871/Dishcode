@@ -1,9 +1,0 @@
-name = "hono"
-main= "src/index.ts"
-compatibility_date = "2025-04-11"
-
-[[d1_databases]]
-binding="DB"
-database_name="dishcode"
-database_id="3661ea71-7787-48ec-a54b-9cb349a04eac"
-migrations_dir = "drizzle"

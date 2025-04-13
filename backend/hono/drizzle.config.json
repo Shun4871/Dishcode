@@ -1,9 +1,0 @@
-{
-    "schema": "./src/db/schema.ts", 
-    "out": "./migrations",      
-    "driver": "sqlite",   
-    "dialect": "sqlite",       
-    "dbCredentials": {
-      "url": "./db.sqlite"       
-    }
-  }
