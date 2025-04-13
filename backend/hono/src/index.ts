@@ -3,7 +3,9 @@ import { cors } from 'hono/cors'
 
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { drizzle } from 'drizzle-orm/d1';
+import { and, eq } from 'drizzle-orm';
 import { user } from './db/schema';
+import { favorite } from './db/schema';
 
 import webhookRoutes from './routes/webhooks'
 
@@ -44,6 +46,148 @@ app.get('/users', async (c) => {
   return c.json(users);
 });
 
+//お気に入りデータベース取得
+app.get('/favorite', async (c) => {
+  const db = drizzle(c.env.DB);
+  const favorites = await db.select().from(favorite).all();
+  return c.json(favorites);
+});
+
+// お気に入り登録
+app.post('/api/favorite', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: 'Not logged in' }, 401);
+  }
+
+  const db = drizzle(c.env.DB);
+  const body = await c.req.json();
+  const { recipeURL } = body;
+
+  if (!recipeURL) {
+    return c.json({ message: 'Recipe URL is required' }, 400);
+  }
+
+  // Clerk IDからuserを取得
+  const [userRow] = await db
+    .select()
+    .from(user)
+    .where(eq(user.clerkId, auth.userId))
+    .limit(1);
+
+  if (!userRow) {
+    return c.json({ message: 'User not found' }, 404);
+  }
+
+  // insert
+  await db.insert(favorite).values({
+    userId: userRow.id,
+    recipeURL,
+  });
+
+  return c.json({ message: 'Favorite added' });
+});
+// お気に入り削除
+app.delete('/api/favorite', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: 'Not logged in' }, 401);
+  }
+
+  const db = drizzle(c.env.DB);
+  const body = await c.req.json();
+  const { recipeURL } = body;
+
+  if (!recipeURL) {
+    return c.json({ message: 'Recipe URL is required' }, 400);
+  }
+
+  // Clerk IDからuserを取得
+  const [userRow] = await db
+    .select()
+    .from(user)
+    .where(eq(user.clerkId, auth.userId))
+    .limit(1);
+
+  if (!userRow) {
+    return c.json({ message: 'User not found' }, 404);
+  }
+
+  // ユーザーに紐づくお気に入りを削除
+  await db
+    .delete(favorite)
+    .where(
+      and(eq(favorite.recipeURL, recipeURL), eq(favorite.userId, userRow.id))
+    )
+    .execute();
+
+  return c.json({ message: 'Favorite deleted' });
+});
+
+//お気に入り取得
+app.get('/favorite/:clerkId', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: 'Not logged in' }, 401);
+  }
+
+  const requestedClerkId = c.req.param('clerkId');
+
+  // 自分以外のユーザーのお気に入りを見れないように
+  if (auth.userId !== requestedClerkId) {
+    return c.json({ message: 'Forbidden' }, 403);
+  }
+
+  const db = drizzle(c.env.DB);
+
+  // clerk_id → user.id（数値）を取得
+  const [userRecord] = await db
+    .select()
+    .from(user)
+    .where(eq(user.clerkId, requestedClerkId))
+    .limit(1);
+
+  if (!userRecord) {
+    return c.json({ message: 'User not found' }, 404);
+  }
+
+  const favorites = await db
+    .select()
+    .from(favorite)
+    .where(eq(favorite.userId, userRecord.id))
+    .all();
+
+  const favoritesWithMeta = await Promise.all(
+    favorites.map(async (fav) => {
+      try {
+        const res = await fetch(fav.recipeURL);
+        const html = await res.text();
+
+        const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+        const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
+
+        const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
+        const image = ogImageMatch ? ogImageMatch[1].trim() : "";
+
+        return {
+          ...fav,
+          title,
+          image,
+        };
+      } catch (error: any) {
+        console.error(`Error fetching metadata for ${fav.recipeURL}:`, error);
+        return {
+          ...fav,
+          title: "タイトル取得エラー",
+          image: "",
+          error: error.message,
+        };
+      }
+    })
+  );
+
+  return c.json(favoritesWithMeta);
+});
 
 
 app.get("/recipe", async (c) => {
