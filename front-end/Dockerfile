@@ -1,8 +1,7 @@
 # === Build Stage ===
-FROM oven/bun:latest AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 依存関係のインストール、コピー、ビルドなど bun を使って実行
 COPY package*.json ./
 RUN bun install
 
@@ -12,7 +11,7 @@ COPY . .
 RUN bun run build
 
 # === Production Stage ===
-FROM oven/bun:latest AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
