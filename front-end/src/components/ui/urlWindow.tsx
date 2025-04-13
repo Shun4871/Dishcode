@@ -16,11 +16,45 @@ interface UrlWindowProps {
 
 const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   // 各レシピの「いいね」状態を配列で管理
-  const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
+  const [favorites, setFavorites] = useState<boolean[]>(
+    Array(recipes.length).fill(true) // 初期状態は全てお気に入り済みと仮定（後でAPI側から受け取る形にしてもOK）
+  );
 
-  // いいねボタンのトグル
-  const toggleFavorite = (index: number) => {
-    setFavorites((prev) => prev.map((fav, i) => (i === index ? !fav : fav)));
+  // いいねボタンのトグル処理
+  const toggleFavorite = async (index: number) => {
+    const newFavorites = [...favorites];
+    const recipe = recipes[index];
+
+    try {
+      if (newFavorites[index]) {
+        // 現在いいね → 削除
+        const res = await fetch("/api/favorite", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeURL: recipe.url }),
+        });
+
+        if (!res.ok) throw new Error("削除に失敗しました");
+
+        newFavorites[index] = false;
+      } else {
+        // 現在いいねしてない → 追加
+        const res = await fetch("api/favorite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeURL: recipe.url }),
+        });
+
+        if (!res.ok) throw new Error("追加に失敗しました");
+
+        newFavorites[index] = true;
+      }
+
+      setFavorites(newFavorites);
+    } catch (err) {
+      console.error("お気に入りの更新に失敗しました", err);
+      alert("お気に入りの更新に失敗しました");
+    }
   };
 
   return (
