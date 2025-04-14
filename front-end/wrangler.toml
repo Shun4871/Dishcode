@@ -1,4 +1,7 @@
 name = "dishcode"
-main = "src/app/layout.tsx"
+
 compatibility_date = "2024-10-18"
-compatibility_flags = ["nodejs_compat"] # nodejs_compat_v2として認識される
+compatibility_flags = ["nodejs_compat"]  # node:buffer, node:async_hooks を使うのに必要
+
+# Pages 用の設定 (必須)
+pages_build_output_dir = ".vercel/output/static"
