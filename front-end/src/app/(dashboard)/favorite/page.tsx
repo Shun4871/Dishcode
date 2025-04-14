@@ -24,6 +24,9 @@ async function getMetadata(urls: string[]) {
   return data;
 }
 
+export const runtime = 'edge';
+
+
 export default async function Favorite() {
   const items = await getMetadata(urls);
 
