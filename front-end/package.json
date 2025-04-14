@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postbuild": "rm -rf .next/cache",
+    "export": "next export"
   },
   "dependencies": {
     "@clerk/nextjs":"^6.14.3",
