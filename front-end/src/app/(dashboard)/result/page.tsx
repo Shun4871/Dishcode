@@ -41,10 +41,6 @@ export default function ResultPage() {
     }
   };
 
-  console.log("url1:", url1);
-console.log("url2:", url2);
-console.log("url3:", url3);
-
 
   useEffect(() => {
     
