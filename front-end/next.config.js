@@ -12,7 +12,6 @@ const nextConfig = {
     ignoreDuringBuilds: true, // ESLintエラーを無視してビルド成功させる
   },
   reactStrictMode: true,
-  swcMinify: true,
 };
 
 module.exports = nextConfig;
