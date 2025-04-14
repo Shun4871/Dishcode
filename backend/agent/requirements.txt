@@ -1,7 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 openai
 python-dotenv
+langchain
 langchain_openai
-browser-use
+browser-use==0.1.40
+httpx
 pydantic
+playwright>=1.49.0
+beautifulsoup4
