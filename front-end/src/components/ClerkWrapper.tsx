@@ -9,7 +9,7 @@ export default function ClerkWrapper({ children }: { children: React.ReactNode }
     console.error("ClerkのpublishableKeyが設定されていません。");
     return (
       <div>
-        <p>Clerkの設定エラー</p>
+        <p>Clerkの設定エラー-</p>
         <p>
           {`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY が設定されていません。
 受け取った値: ${publishableKey}`}
