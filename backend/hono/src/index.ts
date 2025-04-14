@@ -43,16 +43,27 @@ app.get('/login', (c) => {
 // 全ユーザー取得
 app.get('/users', async (c) => {
   const db = drizzle(c.env.DB);
-  const users = await db.select().from(user).all();
-  return c.json(users);
+  try {
+    const users = await db.select().from(user).all();
+    return c.json(users);
+  } catch (error: any) {
+    console.error("Error fetching users:", error);
+    return c.json({ message: "Internal server error", error: error.message }, 500);
+  }
 });
 
 //お気に入りデータベース取得
 app.get('/favorite', async (c) => {
   const db = drizzle(c.env.DB);
-  const favorites = await db.select().from(favorite).all();
-  return c.json(favorites);
+  try {
+    const favorites = await db.select().from(favorite).all();
+    return c.json(favorites);
+  } catch (error: any) {
+    console.error("Error fetching favorites:", error);
+    return c.json({ message: "Internal server error", error: error.message }, 500);
+  }
 });
+
 
 // お気に入り登録
 app.post('/api/favorite', async (c) => {
@@ -77,7 +88,7 @@ app.post('/api/favorite', async (c) => {
     .limit(1);
 
   if (!userRow) {
-    return c.json({ message: 'User not found' }, 404);
+    return c.json({ message: 'User not found' }, 405);
   }
 
   // insert

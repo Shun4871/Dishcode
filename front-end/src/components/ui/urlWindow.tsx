@@ -17,7 +17,7 @@ interface UrlWindowProps {
 const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   // 各レシピの「いいね」状態を配列で管理
   const [favorites, setFavorites] = useState<boolean[]>(
-    Array(recipes.length).fill(true) // 初期状態は全てお気に入り済みと仮定（後でAPI側から受け取る形にしてもOK）
+    Array(recipes.length).fill(false) // 初期状態は全てお気に入り済みと仮定（後でAPI側から受け取る形にしてもOK）
   );
 
   // いいねボタンのトグル処理
@@ -39,7 +39,7 @@ const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
         newFavorites[index] = false;
       } else {
         // 現在いいねしてない → 追加
-        const res = await fetch("api/favorite", {
+        const res = await fetch("/api/favorite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeURL: recipe.url }),
