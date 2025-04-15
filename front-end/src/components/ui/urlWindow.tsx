@@ -1,4 +1,4 @@
-// ファイル例：components/ui/UrlWindow.tsx
+// ファイル例：components/ui/urlWindow.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,21 +20,24 @@ interface UrlWindowProps {
 export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   const { userId } = useAuth();
   const router = useRouter();
+  // 初期状態は recipes 配列の長さに合わせ false をセット
   const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
 
-  // 初回レンダリング時に、必要であればお気に入り状態を取得
+  // クライアント側でお気に入り情報を再取得して状態を同期
   useEffect(() => {
-    // ログインしている場合のみAPIからお気に入り情報を取得する
     if (!userId) return;
     const fetchFavorites = async () => {
       try {
-        const res = await fetch(`/api/favorite/${userId}`);
+        // GET エンドポイントは /api/favorites に統一
+        const res = await fetch(`/api/favorites`);
         if (res.ok) {
           const data = await res.json();
-          // data はお気に入りレシピの配列（各お気に入りオブジェクトに recipeURL があると想定）
-          const favoriteURLs: string[] = data.map((fav: any) => fav.recipeURL);
+          // サーバー側では各お気に入りオブジェクトは { url, title, image } の形式で返していると想定
+          const favoriteURLs: string[] = data.map((fav: any) => fav.url);
           const newFavorites = recipes.map(recipe => favoriteURLs.includes(recipe.url));
           setFavorites(newFavorites);
+        } else {
+          console.error("お気に入り取得エラー:", res.statusText);
         }
       } catch (err) {
         console.error("お気に入り取得エラー:", err);
@@ -45,7 +48,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
 
   // お気に入りボタンのトグル処理
   const toggleFavorite = async (index: number) => {
-    // ログインしていない場合はログインページにリダイレクト
+    // ログインしていなければ /sign-in へリダイレクト
     if (!userId) {
       router.push("/sign-in");
       return;
@@ -56,7 +59,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
 
     try {
       if (newFavorites[index]) {
-        // お気に入り削除：DELETE リクエスト
+        // お気に入り削除：DELETE /api/favorite
         const res = await fetch("/api/favorite", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -65,7 +68,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
         if (!res.ok) throw new Error("削除失敗");
         newFavorites[index] = false;
       } else {
-        // お気に入り追加：POST リクエスト
+        // お気に入り追加：POST /api/favorite
         const res = await fetch("/api/favorite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,7 +96,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
             height={180}
             className="rounded-lg"
           />
-          {/* タイトルとリンク */}
+          {/* タイトルと外部リンク */}
           <div className="ml-4 flex-grow">
             <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
               <h2 className="text-lg font-bold">{recipe.title}</h2>

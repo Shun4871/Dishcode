@@ -23,6 +23,7 @@ export default async function FavoritePage() {
   return (
     <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
       <h1 className="text-2xl font-bold mb-4">お気に入りレシピ一覧</h1>
+      {/* サーバー側で取得した favorites を UrlWindow に渡す */}
       <UrlWindow recipes={favorites} />
       <Link href="/">
         <button className="w-60 h-20 bg-[#DD9004] text-3xl text-white rounded-2xl mb-12">

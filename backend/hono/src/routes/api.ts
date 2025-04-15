@@ -33,10 +33,13 @@ const fetchMetadataForUrls = async (urls: string[]) => {
   return await Promise.all(urls.map(fetchMetadataForUrl));
 };
 
-// ==========================
-// お気に入り登録エンドポイント
-// POST /api/favorite
-// ==========================
+app.get('/', (c) => {
+  return c.json({ message: '/api,OK!' });
+});
+
+// -------------------------------
+// お気に入り登録エンドポイント (POST /api/favorite)
+// -------------------------------
 app.post('/favorite', async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
@@ -45,7 +48,7 @@ app.post('/favorite', async (c) => {
   const { recipeURL } = await c.req.json();
   if (!recipeURL) return c.json({ message: 'Recipe URL is required' }, 400);
 
-  // DB内のユーザーを認証情報(clerkId)で検索
+  // DB内のユーザーを認証情報 (clerkId) で検索
   const [userRow] = await db
     .select()
     .from(user)
@@ -57,10 +60,9 @@ app.post('/favorite', async (c) => {
   return c.json({ message: 'Favorite added' });
 });
 
-// ==========================
-// お気に入り削除エンドポイント
-// DELETE /api/favorite
-// ==========================
+// -------------------------------
+// お気に入り削除エンドポイント (DELETE /api/favorite)
+// -------------------------------
 app.delete('/favorite', async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
@@ -76,30 +78,27 @@ app.delete('/favorite', async (c) => {
     .limit(1);
   if (!userRow) return c.json({ message: 'User not found' }, 404);
 
-  await db
-    .delete(favorite)
+  await db.delete(favorite)
     .where(and(eq(favorite.recipeURL, recipeURL), eq(favorite.userId, userRow.id)))
     .execute();
 
   return c.json({ message: 'Favorite deleted' });
 });
 
-// ======================================
-// お気に入り取得エンドポイント
-// GET /api/favorite/:clerkId
-// ユーザーのお気に入りの recipeURL 一覧から、メタデータを取得
-// ======================================
-app.get('/favorite/:clerkId', async (c) => {
+// ---------------------------------------------
+// お気に入り取得エンドポイント (GET /api/favorites)
+// 認証済みユーザーのDBからお気に入り情報を取得し、
+// 各レシピのメタデータを抽出して返す
+// ---------------------------------------------
+app.get('/favorites', async (c) => {
   const auth = getAuth(c);
-  const clerkId = c.req.param('clerkId');
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
-  if (auth.userId !== clerkId) return c.json({ message: 'Forbidden' }, 403);
 
   const db = drizzle(c.env.DB);
   const [userRow] = await db
     .select()
     .from(user)
-    .where(eq(user.clerkId, clerkId))
+    .where(eq(user.clerkId, auth.userId))
     .limit(1);
   if (!userRow) return c.json({ message: 'User not found' }, 404);
 
@@ -109,13 +108,16 @@ app.get('/favorite/:clerkId', async (c) => {
     .where(eq(favorite.userId, userRow.id))
     .all();
 
-  // お気に入りレコードから recipeURL の一覧を作成
-  const urlList = favorites.map(fav => fav.recipeURL);
+  // favorites から recipeURL 一覧を抽出
+  const urlList = favorites.map((fav) => fav.recipeURL);
 
-  // 共通関数でメタデータ取得
+  // 各URLのメタデータを取得
   const favoritesWithMeta = await fetchMetadataForUrls(urlList);
 
   return c.json(favoritesWithMeta);
 });
+
+
+
 
 export default app;
