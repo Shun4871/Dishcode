@@ -7,9 +7,8 @@ export const metadata: Metadata = {
   title: "Dhiscode",
   description: "数ある料理サイトからあなたに合うレシピをチョイス！",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon/favicon.svg",
+    shortcut: "/favcon/favicon.svg",
   },
 };
 
@@ -21,15 +20,11 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-      <link rel="icon" href="/favicon.ico" sizes="any" />
-      <link
-          rel="icon"
-          href="/icon?<generated>"
-          type="image/<generated>"
-          sizes="<generated>"
-        />
-      
+        <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" type="image/png" href="/favicon/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/favicon/favicon-16x16.png" sizes="16x16" />
       </head>
+
       <body className="flex flex-col min-h-screen">
         <ClerkWrapper>
           <Header />
