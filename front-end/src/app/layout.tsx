@@ -6,6 +6,14 @@ import ClerkWrapper from "@/components/ClerkWrapper";
 export const metadata: Metadata = {
   title: "Dhiscode",
   description: "数ある料理サイトからあなたに合うレシピをチョイス！",
+  icons:[
+    { rel: "icon", url: "/favicons/favicon.ico" },
+    { rel: "apple-touch-icon", url: "/favicons/apple-touch-icon.png" },
+    { rel: "icon", url: "/favicons/favicon.svg" },
+    { rel: "icon", url: "/favicons/favicon-32x32.png", sizes: "32x32" },
+    { rel: "icon", url: "/favicons/favicon-16x16.png", sizes: "16x16" },
+    { rel: "manifest", url: "/favicons/site.webmanifest" },
+  ]
 };
 
 export default function RootLayout({
@@ -16,11 +24,12 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon" />
-        <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
-        <link rel="icon" type="image/png" href="/favicon/favicon-32x32.png" sizes="32x32" />
-        <link rel="icon" type="image/png" href="/favicon/favicon-16x16.png" sizes="16x16" />
-        <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
+        <link rel="icon" href="/favicons/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicons/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16" />
+        <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+        <link rel="manifest" href="/favicons/site.webmanifest" />
       </head>
 
       <body className="flex flex-col min-h-screen">
