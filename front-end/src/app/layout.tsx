@@ -6,6 +6,10 @@ import ClerkWrapper from "@/components/ClerkWrapper";
 export const metadata: Metadata = {
   title: "Dhiscode",
   description: "数ある料理サイトからあなたに合うレシピをチョイス！",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
