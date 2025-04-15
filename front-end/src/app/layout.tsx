@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   description: "数ある料理サイトからあなたに合うレシピをチョイス！",
   icons: {
     icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -19,6 +20,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+      <link rel="icon" href="/favicon.ico" sizes="any" />
+      <link
+          rel="icon"
+          href="/icon?<generated>"
+          type="image/<generated>"
+          sizes="<generated>"
+        />
+      
+      </head>
       <body className="flex flex-col min-h-screen">
         <ClerkWrapper>
           <Header />
