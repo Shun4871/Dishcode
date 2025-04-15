@@ -1,10 +1,12 @@
+// ファイル例：components/ui/UrlWindow.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 
-interface Recipe {
+export interface Recipe {
   title: string;
   image: string;
   url: string;
@@ -14,45 +16,52 @@ interface UrlWindowProps {
   recipes: Recipe[];
 }
 
-const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
-  // 各レシピの「いいね」状態を配列で管理
-  const [favorites, setFavorites] = useState<boolean[]>(
-    Array(recipes.length).fill(false) // 初期状態は全てお気に入り済みと仮定（後でAPI側から受け取る形にしてもOK）
-  );
+export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
+  const { userId } = useAuth();
+  const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
 
-  // いいねボタンのトグル処理
+  // 初回マウント時に Hono サーバーからお気に入り状態を取得
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch("/api/favorite/" + userId);
+        // ※ Hono 側は GET /favorites を用意しているため、
+        // 次の行は不要。ここではサーバー側のトグル済み状態との整合性を例示するために残しておきます。
+        // 実際は FavoritePage の取得結果 (favorites) が UrlWindow に渡されるため、ここでの更新は不要です。
+      } catch (err) {
+        console.error("お気に入り取得エラー:", err);
+      }
+    };
+    fetchFavorites();
+  }, [userId, recipes]);
+
+  // お気に入りのトグル処理（POST / DELETE で Hono サーバーに更新）
   const toggleFavorite = async (index: number) => {
     const newFavorites = [...favorites];
     const recipe = recipes[index];
 
     try {
       if (newFavorites[index]) {
-        // 現在いいね → 削除
         const res = await fetch("/api/favorite", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeURL: recipe.url }),
         });
-
-        if (!res.ok) throw new Error("削除に失敗しました");
-
+        if (!res.ok) throw new Error("削除失敗");
         newFavorites[index] = false;
       } else {
-        // 現在いいねしてない → 追加
         const res = await fetch("/api/favorite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeURL: recipe.url }),
         });
-
-        if (!res.ok) throw new Error("追加に失敗しました");
-
+        if (!res.ok) throw new Error("追加失敗");
         newFavorites[index] = true;
       }
-
       setFavorites(newFavorites);
     } catch (err) {
-      console.error("お気に入りの更新に失敗しました", err);
+      console.error("お気に入り更新エラー:", err);
       alert("お気に入りの更新に失敗しました");
     }
   };
@@ -60,11 +69,7 @@ const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   return (
     <div className="flex flex-col gap-6 w-full justify-center items-center">
       {recipes.map((recipe, index) => (
-        <div
-          key={index}
-          className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]"
-        >
-          {/* 画像 */}
+        <div key={index} className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]">
           <Image
             src={recipe.image}
             alt={recipe.title}
@@ -72,19 +77,12 @@ const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
             height={180}
             className="rounded-lg"
           />
-
-          {/* タイトル */}
           <div className="ml-4 flex-grow">
             <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
               <h2 className="text-lg font-bold">{recipe.title}</h2>
             </Link>
           </div>
-
-          {/* いいねボタン */}
-          <div
-            className="cursor-pointer"
-            onClick={() => toggleFavorite(index)}
-          >
+          <div className="cursor-pointer" onClick={() => toggleFavorite(index)}>
             <Image
               src={favorites[index] ? "/like-star.svg" : "/not-like-star.svg"}
               alt="like icon"
@@ -97,5 +95,3 @@ const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     </div>
   );
 };
-
-export { UrlWindow };
