@@ -29,7 +29,15 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     const fetchFavorites = async () => {
       try {
         // GET エンドポイントは /api/favorites に統一
-        const res = await fetch(`/api/favorites`);
+        const res = await fetch(
+          `/api/favorites`
+          , {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      
         if (res.ok) {
           const data = await res.json();
           // サーバー側では各お気に入りオブジェクトは { url, title, image } の形式で返していると想定
