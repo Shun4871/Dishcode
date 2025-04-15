@@ -12,7 +12,6 @@ export default function ClerkWrapper({ children }: { children: React.ReactNode }
 
   return (
     <ClerkProvider
-    clerkJSUrl="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5.61.0/dist/clerk.browser.js"
     publishableKey={publishableKey} >
       {children}
     </ClerkProvider>
