@@ -20,6 +20,7 @@ export type Bindings = {
   DB: D1Database;
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
+  EXTERNAL_API_URL: string;
 };
 
 
@@ -137,29 +138,44 @@ app.get('/recipe', async (c) => {
 
     // 7) 同じパラメータで外部 API を呼び出し
     const params = new URLSearchParams(query)
-    const target = `https://browser-use-dishcode-backend-api-production.up.railway.app/api/search-agent-super-cool?${params}`
+    const baseUrl = c.env.EXTERNAL_API_URL
+
+    if (!baseUrl) {
+      return c.json({ error: 'External API URL not configured' }, 500)
+    }
+
+      const target = `${baseUrl}?${params}`
     const resp = await fetch(target, { method: 'GET' })
     if (!resp.ok) {
       return c.json({ error: 'External API fetch failed', status: resp.status }, 502)
     }
-    const data = await resp.json()
-    // 簡単な型チェック
-    if (
-      typeof data !== 'object' ||
-      typeof (data as any).url1 !== 'string' ||
-      typeof (data as any).url2 !== 'string' ||
-      typeof (data as any).url3 !== 'string'
-    ) {
-      return c.json({ error: 'Invalid external API response format' }, 502)
-    }
+    // レスポンス中身を一度ログ出力
+    const data = await resp.json();
+    console.log('外部 API からの応答:', data);
 
-    // 8) フロントに返却
-    return c.json(data)
+    const { url1, url2, url3 } = data as {
+      url1?: string;
+      url2?: string;
+      url3?: string;
+    };
+
+    if (
+      typeof url1 !== 'string' ||
+      typeof url2 !== 'string' ||
+      typeof url3 !== 'string'
+    ) {
+      return c.json(
+        { error: 'Invalid external API response format', data },
+        503
+      );
+    }
+    console.log('返すレスポンス:', { url1, url2, url3 });
+    return c.json({ url1, url2, url3 });
   } catch (e: any) {
     return c.json(
       { error: 'Internal Server Error', details: e.message || String(e) },
       500
-    )
+    );
   }
 })
 
