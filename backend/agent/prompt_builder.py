@@ -14,6 +14,6 @@ def prompt_builder(params: str) -> str:
         f"選択された食材: {urllib.parse.unquote(parsed_params.get('selected', [''])[0])}"
     ]
 
-    prompt = "以下の条件を満たすレシピを3つ検索してください。https://www.yahoo.co.jp/で検索してください。条件ちょっと妥協してでも必ず3つのレシピのURLを出力してください。\n" + "、".join(conditions)
+    prompt = "https://www.yahoo.co.jp/で検索してください。以下の条件を満たすレシピを3つ検索してください。条件ちょっと妥協してでも必ず3つのレシピのURLを出力してください。\n" + "、".join(conditions)
 
     return prompt
