@@ -93,7 +93,7 @@ app.delete('/favorite', async (c) => {
 // 各レシピのメタデータを抽出して返す
 // ---------------------------------------------
 app.get('/favorites', async (c) => {
-  const auth = getAuth(c);
+  const auth = getAuth(c);  // サーバーサイドでClerk認証情報を取得
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
 
   const db = drizzle(c.env.DB);
@@ -102,6 +102,7 @@ app.get('/favorites', async (c) => {
     .from(user)
     .where(eq(user.clerkId, auth.userId))
     .limit(1);
+
   if (!userRow) return c.json({ message: 'User not found' }, 404);
 
   const favorites = await db
@@ -110,10 +111,7 @@ app.get('/favorites', async (c) => {
     .where(eq(favorite.userId, userRow.id))
     .all();
 
-  // favorites から recipeURL 一覧を抽出
   const urlList = favorites.map((fav) => fav.recipeURL);
-
-  // 各URLのメタデータを取得
   const favoritesWithMeta = await fetchMetadataForUrls(urlList);
 
   return c.json(favoritesWithMeta);

@@ -1,7 +1,5 @@
-// ファイル例：components/ui/urlWindow.tsx
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -18,38 +16,43 @@ interface UrlWindowProps {
 }
 
 export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const router = useRouter();
-  // 初期状態は recipes 配列の長さに合わせ false をセット
   const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
 
-
-  // お気に入りボタンのトグル処理
   const toggleFavorite = async (index: number) => {
-    // ログインしていなければ /sign-in へリダイレクト
     if (!userId) {
       router.push("/sign-in");
       return;
     }
+
+    // Obtain the Clerk token
+    const token = await getToken();
 
     const newFavorites = [...favorites];
     const recipe = recipes[index];
 
     try {
       if (newFavorites[index]) {
-        // お気に入り削除：DELETE /api/favorite
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite` , {
+        // Remove favorite: DELETE /api/favorite
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Added Clerk token
+          },
           body: JSON.stringify({ recipeURL: recipe.url }),
         });
         if (!res.ok) throw new Error("削除失敗");
         newFavorites[index] = false;
       } else {
-        // お気に入り追加：POST /api/favorite
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite` , {
+        // Add favorite: POST /api/favorite
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Added Clerk token
+          },
           body: JSON.stringify({ recipeURL: recipe.url }),
         });
         if (!res.ok) throw new Error("追加失敗");
@@ -66,7 +69,6 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     <div className="flex flex-col gap-6 w-full justify-center items-center">
       {recipes.map((recipe, index) => (
         <div key={index} className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]">
-          {/* レシピ画像 */}
           <Image
             src={recipe.image}
             alt={recipe.title}
@@ -74,13 +76,11 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
             height={180}
             className="rounded-lg"
           />
-          {/* タイトルと外部リンク */}
           <div className="ml-4 flex-grow">
             <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
               <h2 className="text-lg font-bold">{recipe.title}</h2>
             </Link>
           </div>
-          {/* お気に入りボタン */}
           <div className="cursor-pointer" onClick={() => toggleFavorite(index)}>
             <Image
               src={favorites[index] ? "/like-star.svg" : "/not-like-star.svg"}
