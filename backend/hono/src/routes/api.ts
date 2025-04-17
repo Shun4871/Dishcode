@@ -5,8 +5,9 @@ import { getAuth } from '@hono/clerk-auth';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 import { user, favorite } from '../db/schema';
+import { Bindings } from '../index';
 
-const app = new Hono<{ Bindings: { DB: D1Database } }>();
+const app = new Hono<{ Bindings: Bindings }>();
 
 // ★ 共通で使用するメタデータ取得関数 ★
 const fetchMetadataForUrl = async (url: string) => {
@@ -42,6 +43,7 @@ app.get('/', (c) => {
 // -------------------------------
 app.post('/favorite', async (c) => {
   const auth = getAuth(c);
+  console.log('auth', auth);
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
 
   const db = drizzle(c.env.DB);
@@ -91,7 +93,7 @@ app.delete('/favorite', async (c) => {
 // 各レシピのメタデータを抽出して返す
 // ---------------------------------------------
 app.get('/favorites', async (c) => {
-  const auth = getAuth(c);
+  const auth = getAuth(c);  // サーバーサイドでClerk認証情報を取得
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
 
   const db = drizzle(c.env.DB);
@@ -100,6 +102,7 @@ app.get('/favorites', async (c) => {
     .from(user)
     .where(eq(user.clerkId, auth.userId))
     .limit(1);
+
   if (!userRow) return c.json({ message: 'User not found' }, 404);
 
   const favorites = await db
@@ -108,13 +111,41 @@ app.get('/favorites', async (c) => {
     .where(eq(favorite.userId, userRow.id))
     .all();
 
-  // favorites から recipeURL 一覧を抽出
   const urlList = favorites.map((fav) => fav.recipeURL);
-
-  // 各URLのメタデータを取得
   const favoritesWithMeta = await fetchMetadataForUrls(urlList);
 
   return c.json(favoritesWithMeta);
+});
+
+// ---------------------------------------------
+// お気に入りチェックエンドポイント (GET /api/favorite/check)
+// 認証済みユーザーのDBからお気に入り情報を取得し、
+// 指定されたURLがそのユーザーのお気に入りかどうかをチェック
+// ---------------------------------------------
+app.get('/favorite/check', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) return c.json({ isFavorite: false }, 401);
+
+  const url = c.req.query('recipeURL');
+  if (!url) return c.json({ message: 'recipeURL is required' }, 400);
+
+  const db = drizzle(c.env.DB);
+  const [userRow] = await db
+    .select()
+    .from(user)
+    .where(eq(user.clerkId, auth.userId))
+    .limit(1);
+
+  if (!userRow) return c.json({ isFavorite: false }, 404);
+
+  const [favoriteRow] = await db
+    .select()
+    .from(favorite)
+    .where(and(eq(favorite.userId, userRow.id), eq(favorite.recipeURL, url)))
+    .limit(1);
+
+  const isFavorite = !!favoriteRow;
+  return c.json({ isFavorite });
 });
 
 

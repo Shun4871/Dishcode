@@ -1,7 +1,6 @@
-// ファイル例：components/ui/urlWindow.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -18,47 +17,57 @@ interface UrlWindowProps {
 }
 
 export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const router = useRouter();
-  // 初期状態は recipes 配列の長さに合わせ false をセット
   const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
+  const [loading, setLoading] = useState(true);
 
-  // クライアント側でお気に入り情報を再取得して状態を同期
+  // 初期化時にお気に入り状態を取得
   useEffect(() => {
-    if (!userId) return;
     const fetchFavorites = async () => {
-      try {
-        // GET エンドポイントは /api/favorites に統一
-        const res = await fetch(
-          `/api/favorites`
-          , {
-            method: "GET",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      
-        if (res.ok) {
-          const data = await res.json();
-          // サーバー側では各お気に入りオブジェクトは { url, title, image } の形式で返していると想定
-          const favoriteURLs: string[] = data.map((fav: any) => fav.url);
-          const newFavorites = recipes.map(recipe => favoriteURLs.includes(recipe.url));
-          setFavorites(newFavorites);
-        } else {
-          console.error("お気に入り取得エラー:", res.statusText);
-        }
-      } catch (err) {
-        console.error("お気に入り取得エラー:", err);
-      }
-    };
-    fetchFavorites();
-  }, [userId, recipes]);
+      if (!userId) return;
 
-  // お気に入りボタンのトグル処理
+      const token = await getToken();
+      if (!token) return;
+
+      const results = await Promise.all(
+        recipes.map(async (recipe) => {
+          try {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite/check?recipeURL=${encodeURIComponent(recipe.url)}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            const data = await res.json();
+            return !!data.isFavorite;
+          } catch (err) {
+            console.error("お気に入り状態の取得に失敗:", err);
+            return false;
+          }
+        })
+      );
+
+      setFavorites(results);
+      setLoading(false);
+    };
+
+    fetchFavorites();
+  }, [recipes, userId, getToken]);
+
   const toggleFavorite = async (index: number) => {
-    // ログインしていなければ /sign-in へリダイレクト
     if (!userId) {
       router.push("/sign-in");
+      return;
+    }
+
+    const token = await getToken();
+    if (!token) {
+      alert("トークン取得に失敗しました");
       return;
     }
 
@@ -66,25 +75,19 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     const recipe = recipes[index];
 
     try {
-      if (newFavorites[index]) {
-        // お気に入り削除：DELETE /api/favorite
-        const res = await fetch("/api/favorite", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipeURL: recipe.url }),
-        });
-        if (!res.ok) throw new Error("削除失敗");
-        newFavorites[index] = false;
-      } else {
-        // お気に入り追加：POST /api/favorite
-        const res = await fetch("/api/favorite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipeURL: recipe.url }),
-        });
-        if (!res.ok) throw new Error("追加失敗");
-        newFavorites[index] = true;
-      }
+      const method = newFavorites[index] ? "DELETE" : "POST";
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ recipeURL: recipe.url }),
+      });
+
+      if (!res.ok) throw new Error(`${method === "POST" ? "追加" : "削除"}失敗`);
+
+      newFavorites[index] = !newFavorites[index];
       setFavorites(newFavorites);
     } catch (err) {
       console.error("お気に入り更新エラー:", err);
@@ -92,11 +95,17 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     }
   };
 
+  if (loading) {
+    return <div className="text-center mt-10">読み込み中...</div>;
+  }
+
   return (
     <div className="flex flex-col gap-6 w-full justify-center items-center">
       {recipes.map((recipe, index) => (
-        <div key={index} className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]">
-          {/* レシピ画像 */}
+        <div
+          key={index}
+          className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]"
+        >
           <Image
             src={recipe.image}
             alt={recipe.title}
@@ -104,13 +113,11 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
             height={180}
             className="rounded-lg"
           />
-          {/* タイトルと外部リンク */}
           <div className="ml-4 flex-grow">
             <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
-              <h2 className="text-lg font-bold">{recipe.title}</h2>
+              <h2 className="text-lg font-bold hover:underline">{recipe.title}</h2>
             </Link>
           </div>
-          {/* お気に入りボタン */}
           <div className="cursor-pointer" onClick={() => toggleFavorite(index)}>
             <Image
               src={favorites[index] ? "/like-star.svg" : "/not-like-star.svg"}
