@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 import Header from "@/components/header";
 import ClerkWrapper from "@/components/ClerkWrapper";
+import CookieConsent from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Dhiscode",
@@ -37,6 +38,7 @@ export default function RootLayout({
           <Header />
           <main className="my-16 flex-1">{children}</main>
         </ClerkWrapper>
+        <CookieConsent />
       </body>
     </html>
   );
