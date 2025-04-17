@@ -19,22 +19,33 @@ interface UrlWindowProps {
 export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   const { userId, getToken } = useAuth();
   const router = useRouter();
-  const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
+  const [favorites, setFavorites] = useState<boolean[]>(
+    Array(recipes.length).fill(false)
+  );
   const [loading, setLoading] = useState(true);
 
-  // 初期化時にお気に入り状態を取得
   useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!userId) return;
+    // ログインしていなければ、全て false のまま読み込み完了にする
+    if (!userId) {
+      setFavorites(Array(recipes.length).fill(false));
+      setLoading(false);
+      return;
+    }
 
+    const fetchFavorites = async () => {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       const results = await Promise.all(
         recipes.map(async (recipe) => {
           try {
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite/check?recipeURL=${encodeURIComponent(recipe.url)}`,
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite/check?recipeURL=${encodeURIComponent(
+                recipe.url
+              )}`,
               {
                 method: "GET",
                 headers: {
@@ -76,14 +87,17 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
 
     try {
       const method = newFavorites[index] ? "DELETE" : "POST";
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite`, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ recipeURL: recipe.url }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite`,
+        {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ recipeURL: recipe.url }),
+        }
+      );
 
       if (!res.ok) throw new Error(`${method === "POST" ? "追加" : "削除"}失敗`);
 
@@ -114,8 +128,14 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
             className="rounded-lg"
           />
           <div className="ml-4 flex-grow">
-            <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
-              <h2 className="text-lg font-bold hover:underline">{recipe.title}</h2>
+            <Link
+              href={recipe.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h2 className="text-lg font-bold hover:underline">
+                {recipe.title}
+              </h2>
             </Link>
           </div>
           <div className="cursor-pointer" onClick={() => toggleFavorite(index)}>
