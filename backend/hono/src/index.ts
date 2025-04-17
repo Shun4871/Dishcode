@@ -100,22 +100,29 @@ app.route('/', metadataRoute);
 
 app.route('/analytics', analytics);
 
-app.get("/recipe", async (c) => {
+app.get('/recipe', async (c) => {
   try {
-    const db = drizzle(c.env.DB);
-    const auth = getAuth(c);
-    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
-    const clerkId = auth.userId;
-  
-    const p = new URL(c.req.url).searchParams;
-    const people        = parseInt(p.get('people')       ?? '0', 10);
-    const oven          = p.get('oven')         === 'true' ? 1 : 0;
-    const hotplate      = p.get('hotplate')     === 'true' ? 1 : 0;
-    const mixer         = p.get('mixer')        === 'true' ? 1 : 0;
-    const time          = parseInt(p.get('time')         ?? '0', 10);
-    const toaster       = p.get('toaster')      === 'true' ? 1 : 0;
-    const pressurecooker= p.get('pressurecooker') === 'true' ? 1 : 0;
-  
+    // 3) トークンを元にユーザー確認
+    const auth = getAuth(c)
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const clerkId = auth.userId
+
+    // 4) Drizzle で DB 接続
+    const db = drizzle(c.env.DB)
+
+    // 5) クエリパラメータを取得 & パース
+    const query = c.req.query() as Record<string, string>
+    const people        = parseInt(query.people       ?? '0', 10)
+    const oven          = query.oven         === 'true' ? 1 : 0
+    const hotplate      = query.hotplate     === 'true' ? 1 : 0
+    const mixer         = query.mixer        === 'true' ? 1 : 0
+    const time          = parseInt(query.time         ?? '0', 10)
+    const toaster       = query.toaster      === 'true' ? 1 : 0
+    const pressurecooker= query.pressurecooker === 'true' ? 1 : 0
+
+    // 6) 検索ログを D1 に保存
     await db.insert(searchLog).values([{
       clerkId,
       people,
@@ -126,44 +133,33 @@ app.get("/recipe", async (c) => {
       toaster,
       pressurecooker,
       createdAt: Date.now(),
-    }]);
-      // クエリパラメータを取得
-      const queryParams = c.req.query()
+    }])
 
-      // 転送先のURL（適宜変更）
-      const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
+    // 7) 同じパラメータで外部 API を呼び出し
+    const params = new URLSearchParams(query)
+    const target = `https://browser-use-dishcode-backend-api-production.up.railway.app/api/search-agent-super-cool?${params}`
+    const resp = await fetch(target, { method: 'GET' })
+    if (!resp.ok) {
+      return c.json({ error: 'External API fetch failed', status: resp.status }, 502)
+    }
+    const data = await resp.json()
+    // 簡単な型チェック
+    if (
+      typeof data !== 'object' ||
+      typeof (data as any).url1 !== 'string' ||
+      typeof (data as any).url2 !== 'string' ||
+      typeof (data as any).url3 !== 'string'
+    ) {
+      return c.json({ error: 'Invalid external API response format' }, 502)
+    }
 
-      // 転送リクエストを送信
-      const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-          method: 'GET',
-      })
-
-      // HTTPステータスコードのチェック
-      if (!response.ok) {
-          return c.json({ error: "Failed to fetch data from target server" }, 500)
-      }
-
-      // JSONデータとしてレスポンスを取得
-      const data: unknown = await response.json()
-
-      // nullチェック
-      if (data === null || typeof data !== "object") {
-          return c.json({ error: "Invalid response format from target server" }, 501)
-      }
-
-      // `data` を型アサーション
-      const responseData = data as { url1?: string; url2?: string; url3?: string }
-
-      // 必須プロパティの存在チェック
-      if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
-          return c.json({ error: "Invalid response format from target server" }, 502)
-      }
-
-      return c.json(responseData)
-  } catch (error) {
-      // `error` が unknown 型にならないように処理
-      const errorMessage = error instanceof Error ? error.message : "Unknown error"
-      return c.json({ error: "Internal server error", details: errorMessage }, 503)
+    // 8) フロントに返却
+    return c.json(data)
+  } catch (e: any) {
+    return c.json(
+      { error: 'Internal Server Error', details: e.message || String(e) },
+      500
+    )
   }
 })
 
