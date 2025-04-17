@@ -117,6 +117,37 @@ app.get('/favorites', async (c) => {
   return c.json(favoritesWithMeta);
 });
 
+// ---------------------------------------------
+// お気に入りチェックエンドポイント (GET /api/favorite/check)
+// 認証済みユーザーのDBからお気に入り情報を取得し、
+// 指定されたURLがそのユーザーのお気に入りかどうかをチェック
+// ---------------------------------------------
+app.get('/favorite/check', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) return c.json({ isFavorite: false }, 401);
+
+  const url = c.req.query('recipeURL');
+  if (!url) return c.json({ message: 'recipeURL is required' }, 400);
+
+  const db = drizzle(c.env.DB);
+  const [userRow] = await db
+    .select()
+    .from(user)
+    .where(eq(user.clerkId, auth.userId))
+    .limit(1);
+
+  if (!userRow) return c.json({ isFavorite: false }, 404);
+
+  const [favoriteRow] = await db
+    .select()
+    .from(favorite)
+    .where(and(eq(favorite.userId, userRow.id), eq(favorite.recipeURL, url)))
+    .limit(1);
+
+  const isFavorite = !!favoriteRow;
+  return c.json({ isFavorite });
+});
+
 
 
 
