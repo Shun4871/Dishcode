@@ -144,7 +144,7 @@ app.get('/recipe', async (c) => {
       return c.json({ error: 'External API URL not configured' }, 500)
     }
 
-      const target = `${baseUrl}?${params}`
+      const target = `${baseUrl}/api/search-agent-super-cool?${params}`
     const resp = await fetch(target, { method: 'GET' })
     if (!resp.ok) {
       return c.json({ error: 'External API fetch failed', status: resp.status }, 502)

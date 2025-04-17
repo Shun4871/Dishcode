@@ -11,7 +11,7 @@
     }
   ],
   "vars": {
-    "EXTERNAL_API_URL" : "https://browser-use-dishcode-backend-api-production.up.railway.app/api/search-agent-super-cool",
+    "EXTERNAL_API_URL" : "https://dishcode-production.up.railway.app",
     "CLERK_PUBLISHABLE_KEY":"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" :"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",
     "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in",

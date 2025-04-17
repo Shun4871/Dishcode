@@ -8,7 +8,7 @@ database_name = "dishcode"
 database_id = "3661ea71-7787-48ec-a54b-9cb349a04eac"
 
 [vars]
-EXTERNAL_API_URL = "https://browser-use-dishcode-backend-api-production.up.railway.app/api/search-agent-super-cool"
+EXTERNAL_API_URL = "https://dishcode-production.up.railway.app"
 NEXT_PUBLIC_API_BASE_URL="https://hono.daigaku-150207.workers.dev"
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA"
 NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
