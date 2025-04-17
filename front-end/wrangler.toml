@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]  # node:buffer, node:async_hooks を使�
 pages_build_output_dir = ".vercel/output/static"
 
 [vars]
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuZGlzaGNvZGUtOTg4NDU2NzQwMjE2LmFzaWEtbm9ydGhlYXN0MS5ydW4uYXBwJA"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA"
 NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
 NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
 NEXT_PUBLIC_CLERK_FRONTEND_API = "clerk.dishcode-988456740216.clerk.accounts.dev"
