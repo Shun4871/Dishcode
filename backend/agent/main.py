@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/api/search-agent-super-cool")
+@app.get("/api/search-agent-super-cool")
 async def search_recipes(
     people: int = Query(...),
     oven: bool = Query(...),

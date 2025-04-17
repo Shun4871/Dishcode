@@ -22,7 +22,7 @@ async def search_async(prompt: str):
     )
 
     # エージェントの実行
-    result = await agent.run(max_steps=5)
+    result = await agent.run(max_steps=3)
 
     return result
 
