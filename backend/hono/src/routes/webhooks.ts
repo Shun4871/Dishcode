@@ -7,30 +7,41 @@ import { eq } from 'drizzle-orm'
 const app = new Hono<{ Bindings: { DB: D1Database } }>()
 
 app.post('/clerk', async (c) => {
-  const db = drizzle(c.env.DB)
-  const body = await c.req.json()
+  const db = drizzle(c.env.DB);
+  const body = await c.req.json();
+  const { type, data } = body;
 
-  if (body.type === 'user.created') {
-    const clerkId = body.data.id
-    const email = body.data.email_addresses?.[0]?.email_address
+  const clerkId = data.id as string;
+  const email = data.email_addresses?.[0]?.email_address ?? null;
+  const birthday = data.birthday ?? null;  // YYYY-MM-DD 文字列
+  const gender = data.gender ?? null;      // Clerk 上の文字列
 
-    // すでに登録されていたらスキップ（idempotentな設計）
-    await db.insert(user).values({
-      clerkId,
-      email,
-    }).onConflictDoNothing()
-
-    return c.json({ status: 'user created' })
-  }
-  if (body.type === 'user.deleted') {
-    const clerkId = body.data.id
-
-    await db.delete(user).where(eq(user.clerkId, clerkId)).execute()
-
-    return c.json({ status: 'user deleted' })
+  if (type === 'user.created') {
+    await db
+      .insert(user)
+      .values({ clerkId, email, birthday, gender })
+      .onConflictDoNothing();
+    return c.json({ status: 'user created' });
   }
 
-  return c.json({ status: 'ignored' })
-})
+  if (type === 'user.updated') {
+    await db
+      .update(user)
+      .set({ email, birthday, gender })
+      .where(eq(user.clerkId, clerkId))
+      .execute();
+    return c.json({ status: 'user updated' });
+  }
+
+  if (type === 'user.deleted') {
+    await db
+      .delete(user)
+      .where(eq(user.clerkId, clerkId))
+      .execute();
+    return c.json({ status: 'user deleted' });
+  }
+
+  return c.json({ status: 'ignored' });
+});
 
 export default app

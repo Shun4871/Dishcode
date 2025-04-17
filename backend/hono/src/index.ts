@@ -6,10 +6,12 @@ import { drizzle } from 'drizzle-orm/d1';
 
 import { user } from './db/schema';
 import { favorite } from './db/schema';
+import { searchLog } from './db/schema';
 
 import webhookRoutes from './routes/webhooks'
 import metadataRoute from './routes/metadata';
 import api from './routes/api';
+import analytics from './analytics/analytics';
 
 
 
@@ -96,57 +98,121 @@ app.route('/api', api)
 
 app.route('/', metadataRoute);
 
-app.get("/recipe", async (c) => {
+app.route('/analytics', analytics);
+
+app.get('/recipe', async (c) => {
   try {
-      // クエリパラメータを取得
-      const queryParams = c.req.query()
+    // 3) トークンを元にユーザー確認
+    const auth = getAuth(c)
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const clerkId = auth.userId
 
-      // 転送先のURL（適宜変更）
-      const targetServerUrl = " http://0.0.0.0:8000/api-endpoint"
+    // 4) Drizzle で DB 接続
+    const db = drizzle(c.env.DB)
 
-      // 転送リクエストを送信
-      const response = await fetch(`${targetServerUrl}?${new URLSearchParams(queryParams)}`, {
-          method: 'GET',
-      })
+    // 5) クエリパラメータを取得 & パース
+    const query = c.req.query() as Record<string, string>
+    const people        = parseInt(query.people       ?? '0', 10)
+    const oven          = query.oven         === 'true' ? 1 : 0
+    const hotplate      = query.hotplate     === 'true' ? 1 : 0
+    const mixer         = query.mixer        === 'true' ? 1 : 0
+    const time          = parseInt(query.time         ?? '0', 10)
+    const toaster       = query.toaster      === 'true' ? 1 : 0
+    const pressurecooker= query.pressurecooker === 'true' ? 1 : 0
 
-      // HTTPステータスコードのチェック
-      if (!response.ok) {
-          return c.json({ error: "Failed to fetch data from target server" }, 500)
-      }
+    // 6) 検索ログを D1 に保存
+    await db.insert(searchLog).values([{
+      clerkId,
+      people,
+      oven,
+      hotplate,
+      mixer,
+      time,
+      toaster,
+      pressurecooker,
+      createdAt: Date.now(),
+    }])
 
-      // JSONデータとしてレスポンスを取得
-      const data: unknown = await response.json()
+    // 7) 同じパラメータで外部 API を呼び出し
+    const params = new URLSearchParams(query)
+    const target = `https://browser-use-dishcode-backend-api-production.up.railway.app/api/search-agent-super-cool?${params}`
+    const resp = await fetch(target, { method: 'GET' })
+    if (!resp.ok) {
+      return c.json({ error: 'External API fetch failed', status: resp.status }, 502)
+    }
+    const data = await resp.json()
+    // 簡単な型チェック
+    if (
+      typeof data !== 'object' ||
+      typeof (data as any).url1 !== 'string' ||
+      typeof (data as any).url2 !== 'string' ||
+      typeof (data as any).url3 !== 'string'
+    ) {
+      return c.json({ error: 'Invalid external API response format' }, 502)
+    }
 
-      // nullチェック
-      if (data === null || typeof data !== "object") {
-          return c.json({ error: "Invalid response format from target server" }, 501)
-      }
-
-      // `data` を型アサーション
-      const responseData = data as { url1?: string; url2?: string; url3?: string }
-
-      // 必須プロパティの存在チェック
-      if (!responseData.url1 || !responseData.url2 || !responseData.url3) {
-          return c.json({ error: "Invalid response format from target server" }, 502)
-      }
-
-      return c.json(responseData)
-  } catch (error) {
-      // `error` が unknown 型にならないように処理
-      const errorMessage = error instanceof Error ? error.message : "Unknown error"
-      return c.json({ error: "Internal server error", details: errorMessage }, 503)
+    // 8) フロントに返却
+    return c.json(data)
+  } catch (e: any) {
+    return c.json(
+      { error: 'Internal Server Error', details: e.message || String(e) },
+      500
+    )
   }
 })
 
 
 app.get('/recipe-test', async (c) => {
-  const url1 = "https://delishkitchen.tv/recipes/233678306187149791";
-  const url2 = "https://delishkitchen.tv/recipes/398816650859643387";
-  const url3 = "https://recipe.rakuten.co.jp/recipe/1410014917/";
+  try {
+    const auth = getAuth(c)
+    // ここでは必ず userId が存在するので追加チェックは不要ですが念のため
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const clerkId = auth.userId
 
-  return c.json({ url1, url2, url3 });
-}
-);
+    // Drizzle インスタンス
+    const db = drizzle(c.env.DB)
+
+    // クエリパラメータ取得
+    const p = new URL(c.req.url).searchParams
+    const people        = parseInt(p.get('people')       ?? '0', 10)
+    const oven          = p.get('oven')         === 'true' ? 1 : 0
+    const hotplate      = p.get('hotplate')     === 'true' ? 1 : 0
+    const mixer         = p.get('mixer')        === 'true' ? 1 : 0
+    const time          = parseInt(p.get('time')         ?? '0', 10)
+    const toaster       = p.get('toaster')      === 'true' ? 1 : 0
+    const pressurecooker= p.get('pressurecooker') === 'true' ? 1 : 0
+
+    // 検索ログを保存
+    await db.insert(searchLog).values([{
+      clerkId,
+      people,
+      oven,
+      hotplate,
+      mixer,
+      time,
+      toaster,
+      pressurecooker,
+      createdAt: Date.now(),
+    }])
+
+    // テスト用のURLを返却
+    const url1 = "https://delishkitchen.tv/recipes/233678306187149791"
+    const url2 = "https://delishkitchen.tv/recipes/398816650859643387"
+    const url3 = "https://recipe.rakuten.co.jp/recipe/1410014917/"
+
+    return c.json({ url1, url2, url3 })
+  } catch (err: any) {
+    // エラー内容を返してデバッグしやすく
+    return c.json(
+      { error: 'Internal Server Error', detail: err.message },
+      500
+    )
+  }
+})
 
 
 
