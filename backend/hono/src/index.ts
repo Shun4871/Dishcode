@@ -14,9 +14,12 @@ import api from './routes/api';
 
 
 
-type Bindings = {
+export type Bindings = {
   DB: D1Database;
+  CLERK_SECRET_KEY: string;
+  CLERK_PUBLISHABLE_KEY: string;
 };
+
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -27,7 +30,64 @@ app.get('/', (c) => {
   return c.text('Hello DishCode!')
 })
 
-app.use('*', clerkMiddleware())
+app.post('/search', async (c) => {
+  // クライアントから JSON ボディで { "url": string } を受け取る
+  const data = await c.req.json();
+  const { url } = data;
+
+  if (!url) {
+    return c.json({ error: 'URL が必要です' }, 400);
+  }
+
+  try {
+    // URL の HTML を取得
+    const res = await fetch(url);
+    const html = await res.text();
+
+    // <title> タグからタイトル抽出
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
+
+    // <meta property="og:image"> タグから画像URL抽出
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
+    const image = ogImageMatch ? ogImageMatch[1].trim() : "";
+
+    return c.json({ title, image, url });
+  } catch (error: any) {
+    console.error(`Error fetching metadata for ${url}:`, error);
+    return c.json({ title: "タイトル取得エラー", image: "", error: error.message }, 500);
+  }
+});
+
+app.use('*', async (ctx, next) => {
+
+  if (ctx.req.method === 'OPTIONS') {
+    // CORSヘッダーなどを処理する他のミドルウェアがあるかもしれないのでnext()を呼ぶ
+    // HonoがデフォルトでOPTIONSを処理する場合もある
+    await next();
+    return; // このミドルウェアの残りの処理は行わない
+}
+
+
+  const { CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY } = ctx.env;
+
+  console.log('CLERK_SECRET_KEY:', CLERK_SECRET_KEY);
+  console.log('CLERK_PUBLISHABLE_KEY:', CLERK_PUBLISHABLE_KEY);
+
+  console.log('Clerkを使用して認証を行います。');
+
+  await clerkMiddleware({
+      secretKey: CLERK_SECRET_KEY,
+      publishableKey: CLERK_PUBLISHABLE_KEY,
+  })(ctx, async () => {});
+
+
+  console.log('認証が完了しました。');
+
+
+
+  await next();
+});
 
 // 👇 Webhookルートを `/webhooks` にマウント
 app.route('/webhooks', webhookRoutes)
@@ -88,36 +148,6 @@ app.get('/recipe-test', async (c) => {
 }
 );
 
-
-
-app.post('/search', async (c) => {
-  // クライアントから JSON ボディで { "url": string } を受け取る
-  const data = await c.req.json();
-  const { url } = data;
-
-  if (!url) {
-    return c.json({ error: 'URL が必要です' }, 400);
-  }
-
-  try {
-    // URL の HTML を取得
-    const res = await fetch(url);
-    const html = await res.text();
-
-    // <title> タグからタイトル抽出
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : "タイトルが取得できませんでした";
-
-    // <meta property="og:image"> タグから画像URL抽出
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["'](.*?)["']/i);
-    const image = ogImageMatch ? ogImageMatch[1].trim() : "";
-
-    return c.json({ title, image, url });
-  } catch (error: any) {
-    console.error(`Error fetching metadata for ${url}:`, error);
-    return c.json({ title: "タイトル取得エラー", image: "", error: error.message }, 500);
-  }
-});
 
 
 /////

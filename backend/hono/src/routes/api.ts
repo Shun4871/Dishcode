@@ -5,8 +5,9 @@ import { getAuth } from '@hono/clerk-auth';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 import { user, favorite } from '../db/schema';
+import { Bindings } from '../index';
 
-const app = new Hono<{ Bindings: { DB: D1Database } }>();
+const app = new Hono<{ Bindings: Bindings }>();
 
 // ★ 共通で使用するメタデータ取得関数 ★
 const fetchMetadataForUrl = async (url: string) => {
@@ -42,6 +43,7 @@ app.get('/', (c) => {
 // -------------------------------
 app.post('/favorite', async (c) => {
   const auth = getAuth(c);
+  console.log('auth', auth);
   if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
 
   const db = drizzle(c.env.DB);

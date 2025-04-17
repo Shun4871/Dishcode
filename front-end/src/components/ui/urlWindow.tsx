@@ -23,36 +23,6 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   // 初期状態は recipes 配列の長さに合わせ false をセット
   const [favorites, setFavorites] = useState<boolean[]>(Array(recipes.length).fill(false));
 
-  // クライアント側でお気に入り情報を再取得して状態を同期
-  useEffect(() => {
-    if (!userId) return;
-    const fetchFavorites = async () => {
-      try {
-        // GET エンドポイントは /api/favorites に統一
-        const res = await fetch(
-          `/api/favorites`
-          , {
-            method: "GET",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      
-        if (res.ok) {
-          const data = await res.json();
-          // サーバー側では各お気に入りオブジェクトは { url, title, image } の形式で返していると想定
-          const favoriteURLs: string[] = data.map((fav: any) => fav.url);
-          const newFavorites = recipes.map(recipe => favoriteURLs.includes(recipe.url));
-          setFavorites(newFavorites);
-        } else {
-          console.error("お気に入り取得エラー:", res.statusText);
-        }
-      } catch (err) {
-        console.error("お気に入り取得エラー:", err);
-      }
-    };
-    fetchFavorites();
-  }, [userId, recipes]);
 
   // お気に入りボタンのトグル処理
   const toggleFavorite = async (index: number) => {
@@ -68,7 +38,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
     try {
       if (newFavorites[index]) {
         // お気に入り削除：DELETE /api/favorite
-        const res = await fetch("/api/favorite", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite` , {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeURL: recipe.url }),
@@ -77,7 +47,7 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
         newFavorites[index] = false;
       } else {
         // お気に入り追加：POST /api/favorite
-        const res = await fetch("/api/favorite", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/favorite` , {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeURL: recipe.url }),

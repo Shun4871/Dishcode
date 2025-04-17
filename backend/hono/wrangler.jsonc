@@ -9,7 +9,18 @@
       "database_name": "dishcode",
       "database_id": "3661ea71-7787-48ec-a54b-9cb349a04eac"
     }
-  ]
+  ],
+  "vars": {
+    "CLERK_PUBLISHABLE_KEY":"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" :"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL" : "/sign-up",
+    "CLERK_JWT_PUBLIC_KEY" : "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvT9VzVm1HCDwDndahK4Y\nwQy9QbQrXAy6KDAuaH6lZbNcoKV9Iy1VUeJNg2NkS/BXzcGfi77tDJ+RwGSIRzGX\nPs3oW6/+EyZ5pw1wI0nY3A88dUUjqWeyq+kzJpboff2f4Wf8xFsHOmcjF4o94HMr\nuErv2y6E/bHfYSAjSOtSQ+zwcesETndQea1GZqfhS+kfmD/F7DMiKO3ie7iV4Bu/\nTCqNXC5FfK6hZFvAIip1DXXihBr6ebnJSURrzETwx97CJ+qjJ6qBzk0axzrHGkF0\nLuzFmjq9eg9u21mxy9rRVitC3tPUpsU8Zdgo7KkgkPUFNZLPNspDOMONyQqtDI72\nLQIDAQAB\n-----END PUBLIC KEY-----"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
