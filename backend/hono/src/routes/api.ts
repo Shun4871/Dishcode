@@ -43,23 +43,27 @@ app.get('/', (c) => {
 // -------------------------------
 app.post('/favorite', async (c) => {
   const auth = getAuth(c);
-  console.log('auth', auth);
-  if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
-
+  if (!auth || !auth.userId) return c.json({ message: 'Unauthorized' }, 401);
+  const clerkId = auth.userId;
   const db = drizzle(c.env.DB);
   const { recipeURL } = await c.req.json();
   if (!recipeURL) return c.json({ message: 'Recipe URL is required' }, 400);
 
-  // DB内のユーザーを認証情報 (clerkId) で検索
+  // ユーザー取得
   const [userRow] = await db
     .select()
     .from(user)
-    .where(eq(user.clerkId, auth.userId))
+    .where(eq(user.clerkId, clerkId))
     .limit(1);
-  if (!userRow) return c.json({ message: 'User not found' }, 405);
+  if (!userRow) return c.json({ message: 'User not found' }, 404);
 
-  await db.insert(favorite).values({ userId: userRow.id, recipeURL });
-  return c.json({ message: 'Favorite added' });
+  // お気に入り登録（重複時は何もしない）
+  await db
+    .insert(favorite)
+    .values([{ userId: userRow.id, recipeURL, createdAt: Date.now() }])
+    .onConflictDoNothing();
+
+  return c.json({ message: 'Favorite added' }, 201);
 });
 
 // -------------------------------
@@ -67,23 +71,29 @@ app.post('/favorite', async (c) => {
 // -------------------------------
 app.delete('/favorite', async (c) => {
   const auth = getAuth(c);
-  if (!auth?.userId) return c.json({ message: 'Not logged in' }, 401);
-
+  if (!auth || !auth.userId) return c.json({ message: 'Unauthorized' }, 401);
+  const clerkId = auth.userId;
   const db = drizzle(c.env.DB);
   const { recipeURL } = await c.req.json();
   if (!recipeURL) return c.json({ message: 'Recipe URL is required' }, 400);
-
+  
   const [userRow] = await db
     .select()
     .from(user)
-    .where(eq(user.clerkId, auth.userId))
+    .where(eq(user.clerkId, clerkId))
     .limit(1);
   if (!userRow) return c.json({ message: 'User not found' }, 404);
-
-  await db.delete(favorite)
-    .where(and(eq(favorite.recipeURL, recipeURL), eq(favorite.userId, userRow.id)))
+  
+  await db
+    .delete(favorite)
+    .where(
+      and(
+        eq(favorite.userId, userRow.id),
+        eq(favorite.recipeURL, recipeURL)
+      )
+    )
     .execute();
-
+  
   return c.json({ message: 'Favorite deleted' });
 });
 

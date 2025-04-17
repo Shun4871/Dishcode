@@ -6,10 +6,12 @@ import { drizzle } from 'drizzle-orm/d1';
 
 import { user } from './db/schema';
 import { favorite } from './db/schema';
+import { searchLog } from './db/schema';
 
 import webhookRoutes from './routes/webhooks'
 import metadataRoute from './routes/metadata';
 import api from './routes/api';
+import analytics from './analytics/analytics';
 
 
 
@@ -96,8 +98,35 @@ app.route('/api', api)
 
 app.route('/', metadataRoute);
 
+app.route('/analytics', analytics);
+
 app.get("/recipe", async (c) => {
   try {
+    const db = drizzle(c.env.DB);
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+    const clerkId = auth.userId;
+  
+    const p = new URL(c.req.url).searchParams;
+    const people        = parseInt(p.get('people')       ?? '0', 10);
+    const oven          = p.get('oven')         === 'true' ? 1 : 0;
+    const hotplate      = p.get('hotplate')     === 'true' ? 1 : 0;
+    const mixer         = p.get('mixer')        === 'true' ? 1 : 0;
+    const time          = parseInt(p.get('time')         ?? '0', 10);
+    const toaster       = p.get('toaster')      === 'true' ? 1 : 0;
+    const pressurecooker= p.get('pressurecooker') === 'true' ? 1 : 0;
+  
+    await db.insert(searchLog).values([{
+      clerkId,
+      people,
+      oven,
+      hotplate,
+      mixer,
+      time,
+      toaster,
+      pressurecooker,
+      createdAt: Date.now(),
+    }]);
       // クエリパラメータを取得
       const queryParams = c.req.query()
 
@@ -140,13 +169,54 @@ app.get("/recipe", async (c) => {
 
 
 app.get('/recipe-test', async (c) => {
-  const url1 = "https://delishkitchen.tv/recipes/233678306187149791";
-  const url2 = "https://delishkitchen.tv/recipes/398816650859643387";
-  const url3 = "https://recipe.rakuten.co.jp/recipe/1410014917/";
+  try {
+    const auth = getAuth(c)
+    // ここでは必ず userId が存在するので追加チェックは不要ですが念のため
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    const clerkId = auth.userId
 
-  return c.json({ url1, url2, url3 });
-}
-);
+    // Drizzle インスタンス
+    const db = drizzle(c.env.DB)
+
+    // クエリパラメータ取得
+    const p = new URL(c.req.url).searchParams
+    const people        = parseInt(p.get('people')       ?? '0', 10)
+    const oven          = p.get('oven')         === 'true' ? 1 : 0
+    const hotplate      = p.get('hotplate')     === 'true' ? 1 : 0
+    const mixer         = p.get('mixer')        === 'true' ? 1 : 0
+    const time          = parseInt(p.get('time')         ?? '0', 10)
+    const toaster       = p.get('toaster')      === 'true' ? 1 : 0
+    const pressurecooker= p.get('pressurecooker') === 'true' ? 1 : 0
+
+    // 検索ログを保存
+    await db.insert(searchLog).values([{
+      clerkId,
+      people,
+      oven,
+      hotplate,
+      mixer,
+      time,
+      toaster,
+      pressurecooker,
+      createdAt: Date.now(),
+    }])
+
+    // テスト用のURLを返却
+    const url1 = "https://delishkitchen.tv/recipes/233678306187149791"
+    const url2 = "https://delishkitchen.tv/recipes/398816650859643387"
+    const url3 = "https://recipe.rakuten.co.jp/recipe/1410014917/"
+
+    return c.json({ url1, url2, url3 })
+  } catch (err: any) {
+    // エラー内容を返してデバッグしやすく
+    return c.json(
+      { error: 'Internal Server Error', detail: err.message },
+      500
+    )
+  }
+})
 
 
 
