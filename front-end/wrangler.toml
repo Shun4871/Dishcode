@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]  # node:buffer, node:async_hooks を使�
 pages_build_output_dir = ".vercel/output/static"
 
 [vars]
-NEXT_PUBLIC_API_BASE_URL="https://hono.daigaku-150207.workers.dev/"
+NEXT_PUBLIC_API_BASE_URL="https://hono.daigaku-150207.workers.dev"
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA"
 NEXT_PUBLIC_CLERK_SIGN_IN_URL = "/sign-in"
 NEXT_PUBLIC_CLERK_SIGN_UP_URL = "/sign-up"
