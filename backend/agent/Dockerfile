@@ -6,7 +6,7 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
 
-# システム依存ライブラリ
+# 必要なシステムライブラリ（Playwright用）を先にインストール
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
@@ -15,19 +15,19 @@ RUN apt-get update \
     libasound2 libgdk-pixbuf2.0-0 libgtk-3-0 curl gnupg \
  && rm -rf /var/lib/apt/lists/*
 
-# Python依存関係をインストール
+# Python 依存関係を仮想環境にインストール
 COPY requirements.txt .
 RUN python -m venv /opt/venv \
  && . /opt/venv/bin/activate \
  && pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements.txt playwright
 
-# Playwright のインストール（ブラウザと依存ライブラリ）
+# Playwright のブラウザを /ms-playwright にダウンロード
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN . /opt/venv/bin/activate \
- && pip install --no-cache-dir playwright \
- && playwright install --with-deps
+ && python -m playwright install --with-deps
 
-# ← ここで “ソースコードを丸ごとコピー”
+# アプリケーションコードをコピー
 COPY . .
 
 ########################################
@@ -36,11 +36,22 @@ COPY . .
 FROM python:3.11-slim
 WORKDIR /app
 
-# 仮想環境とコードを引き継ぎ
+# ランタイムにも同じシステムライブラリを入れておく
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
+    libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+    libxrandr2 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 \
+    libasound2 libgdk-pixbuf2.0-0 libgtk-3-0 \
+ && rm -rf /var/lib/apt/lists/*
+
+# ビルダーから venv・アプリ・ブラウザキャッシュ を引き継ぎ
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app /app
+COPY --from=builder /ms-playwright /ms-playwright
 
 ENV PATH="/opt/venv/bin:$PATH"
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
