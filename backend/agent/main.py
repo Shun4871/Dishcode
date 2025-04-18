@@ -20,14 +20,11 @@ async def search_recipes(
     people: int = Query(...),
     oven: bool = Query(...),
     hotplate: bool = Query(...),
-    mixer: bool = Query(...),
     time: int = Query(...),
-    toaster: bool = Query(...),
-    pressurecooker: bool = Query(...),
     selected: str = Query(...)
 ):
     # クエリパラメータを組み合わせてクエリ文字列を作成
-    params = f"people={people}&oven={oven}&hotplate={hotplate}&mixer={mixer}&time={time}&toaster={toaster}&pressurecooker={pressurecooker}&selected={selected}"
+    params = f"people={people}&oven={oven}&hotplate={hotplate}&time={time}&selected={selected}"
 
     # プロンプトを生成
     prompt = prompt_builder(params)
