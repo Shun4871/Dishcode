@@ -21,9 +21,7 @@ export const searchLog = sqliteTable('search_log', {
   people: integer('people', { mode: 'number' }).notNull(),
   oven: integer('oven').notNull(),
   hotplate: integer('hotplate').notNull(),
-  mixer: integer('mixer').notNull(),
   time: integer('time', { mode: 'number' }).notNull(),
   toaster: integer('toaster').notNull(),
-  pressurecooker: integer('pressurecooker').notNull(),
   createdAt: integer('created_at', { mode: 'number' }).notNull(),
 });

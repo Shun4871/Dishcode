@@ -5,10 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 const kitchenOptions = [
-  { label: "圧力鍋", type: "switch" , value :"pressurecooker"},
+  // { label: "圧力鍋", type: "switch" , value :"pressurecooker"},
   { label: "オーブン", type: "switch" , value :"oven"},
   { label: "ホットプレート", type: "switch", value :"hotplate" },
-  { label: "ミキサー", type: "switch" , value :"mixer"},
+  // { label: "ミキサー", type: "switch" , value :"mixer"},
   { label: "希望所要時間", type: "select", value:"time",
     options: [
       { value: "15", label: "15分以内" },
@@ -16,7 +16,7 @@ const kitchenOptions = [
       { value: "60", label: "60分以内" },
       { value: "90", label: "90分以上" }
     ] },
-  { label: "トースター", type: "switch" , value :"toaster"},
+  //{ label: "トースター", type: "switch" , value :"toaster"},
   { label: "何人暮らし", type: "select", value:"people",
     options: [
       { value: "1", label: "1人" },
@@ -36,10 +36,7 @@ export type Kitchen = {
   people: number;
   oven: boolean;
   hotplate: boolean;
-  mixer: boolean;
   time: number;
-  toaster: boolean;
-  pressurecooker: boolean;
 }
 
 export function KitchenStack({ kitchenState, setKitchenState }: KitchenStackProps) {

@@ -11,16 +11,13 @@ import { Load } from "@/components/Load";
 
 const initialState: Kitchen = {
   people: 1,
-  oven: false,
+  oven: true,
   hotplate: false,
-  mixer: false,
   time: 15,
-  toaster: false,
-  pressurecooker: false,
 };
 
 export default function Page() {
-  const { getToken } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
   const [kitchenState, setKitchenState] = useState(initialState);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -28,49 +25,56 @@ export default function Page() {
   const handleItemSelect = async (itemDisplay: string) => {
     setLoading(true);
     try {
-      // 1. Clerk のトークンを取得
-      const token = await getToken();
-      if (!token) throw new Error("認証トークンが取得できませんでした");
-
-      // 2. クエリパラメータを組み立て
+      // 1. クエリパラメータを構築
       const requestData = {
         ...kitchenState,
-        selected: itemDisplay, // エンコードは fetch URLSearchParams 側で行う
+        selected: itemDisplay,
       };
       const params = new URLSearchParams();
       Object.entries(requestData).forEach(([key, value]) => {
-        if (typeof value === "boolean") {
-          params.append(key, value ? "true" : "false");
-        } else {
-          params.append(key, String(value));
-        }
+        params.append(key, String(value));
       });
 
-      // 3. API コール（Authorization ヘッダーに Bearer token）
+      console.log("🔍 送信リクエスト内容:", {
+        url: `${process.env.NEXT_PUBLIC_API_BASE_URL}/recipe?${params.toString()}`,
+        headers: isSignedIn ? { Authorization: "Bearer ***", "Content-Type": "application/json" } : { "Content-Type": "application/json" },
+        requestData,
+      });
+
+      // 2. ヘッダーを準備（未ログイン時は Authorization ヘッダーを付けない）
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (isSignedIn) {
+        const token = await getToken();
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+      }
+
+      // 3. API コール
       const res = await fetch(
+    
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/recipe?${params.toString()}`,
         {
           method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers,
         }
       );
       if (!res.ok) {
         throw new Error(`検索API エラー: ${res.status}`);
       }
 
-      // 4. レスポンスを取得してリダイレクト
-      const data = await res.json() as Record<string, string>;
+      // 4. レスポンスを読み込んでリダイレクト
+      const data = (await res.json()) as Record<string, string>;
       const resultParams = new URLSearchParams();
-      Object.entries(data).forEach(([key, value]) => {
-        resultParams.append(key, value);
+      Object.entries(data).forEach(([k, v]) => {
+        resultParams.append(k, v);
       });
       router.push(`/result?${resultParams.toString()}`);
     } catch (error) {
       console.error("Fetch error:", error);
-      // 必要に応じてユーザー向けのエラーハンドリングを入れてください
+      // 必要なら UI にエラー表示を追加してください
     } finally {
       setLoading(false);
     }

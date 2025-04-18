@@ -103,62 +103,58 @@ app.route('/analytics', analytics);
 
 app.get('/recipe', async (c) => {
   try {
-    // 3) トークンを元にユーザー確認
-    const auth = getAuth(c)
-    if (!auth?.userId) {
-      return c.json({ error: 'Unauthorized' }, 401)
+    // 1) ユーザー認証トークンがあれば取得（未ログインの場合は userId は undefined）
+    const auth = getAuth(c);
+    const clerkId = auth?.userId;  // ログイン済みなら文字列、未ログインなら undefined
+
+    // 2) Drizzle で DB 接続
+    const db = drizzle(c.env.DB);
+
+    // 3) クエリパラメータを取得 & パース
+    const query = c.req.query() as Record<string, string>;
+    const people         = parseInt(query.people        ?? '0', 10);
+    const oven           = query.oven          === 'true' ? 1 : 0;
+    const hotplate       = query.hotplate      === 'true' ? 1 : 0;
+    const time           = parseInt(query.time          ?? '0', 10);
+    const toaster        = query.toaster       === 'true' ? 1 : 0;
+
+    // 4) （任意）ログイン済みユーザーのみ検索ログを保存
+    if (clerkId) {
+      await db.insert(searchLog).values([{
+        clerkId,
+        people,
+        oven,
+        hotplate,
+        time,
+        toaster,
+        createdAt: Date.now(),
+      }]);
     }
-    const clerkId = auth.userId
 
-    // 4) Drizzle で DB 接続
-    const db = drizzle(c.env.DB)
-
-    // 5) クエリパラメータを取得 & パース
-    const query = c.req.query() as Record<string, string>
-    const people        = parseInt(query.people       ?? '0', 10)
-    const oven          = query.oven         === 'true' ? 1 : 0
-    const hotplate      = query.hotplate     === 'true' ? 1 : 0
-    const mixer         = query.mixer        === 'true' ? 1 : 0
-    const time          = parseInt(query.time         ?? '0', 10)
-    const toaster       = query.toaster      === 'true' ? 1 : 0
-    const pressurecooker= query.pressurecooker === 'true' ? 1 : 0
-
-    // 6) 検索ログを D1 に保存
-    await db.insert(searchLog).values([{
-      clerkId,
-      people,
-      oven,
-      hotplate,
-      mixer,
-      time,
-      toaster,
-      pressurecooker,
-      createdAt: Date.now(),
-    }])
-
-    // 7) 同じパラメータで外部 API を呼び出し
-    const params = new URLSearchParams(query)
-    const baseUrl = c.env.EXTERNAL_API_URL
-
+    // 5) 同じパラメータで外部 API を呼び出し
+    const params = new URLSearchParams(query);
+    const baseUrl = c.env.EXTERNAL_API_URL;
     if (!baseUrl) {
-      return c.json({ error: 'External API URL not configured' }, 500)
+      return c.json({ error: 'External API URL not configured' }, 500);
     }
 
-      const target = `${baseUrl}/api/search-agent-super-cool?${params}`
-    const resp = await fetch(target, { method: 'GET' })
+    const target = `${baseUrl}/api/search-agent-super-cool?${params.toString()}`;
+    const resp = await fetch(target, { method: 'GET' });
     if (!resp.ok) {
-      return c.json({ error: 'External API fetch failed', status: resp.status }, 502)
+      return c.json(
+        { error: 'External API fetch failed', status: resp.status },
+        502
+      );
     }
-    // レスポンス中身を一度ログ出力
-    const data = await resp.json();
-    console.log('外部 API からの応答:', data);
 
-    const { url1, url2, url3 } = data as {
+    // 6) 結果をパースして返却
+    const data = await resp.json() as {
       url1?: string;
       url2?: string;
       url3?: string;
     };
 
+    const { url1, url2, url3 } = data;
     if (
       typeof url1 !== 'string' ||
       typeof url2 !== 'string' ||
@@ -169,15 +165,18 @@ app.get('/recipe', async (c) => {
         503
       );
     }
-    console.log('返すレスポンス:', { url1, url2, url3 });
+
     return c.json({ url1, url2, url3 });
+
   } catch (e: any) {
+    console.error(e);
     return c.json(
       { error: 'Internal Server Error', details: e.message || String(e) },
       500
     );
   }
-})
+});
+
 
 
 app.get('/recipe-test', async (c) => {
@@ -208,10 +207,8 @@ app.get('/recipe-test', async (c) => {
       people,
       oven,
       hotplate,
-      mixer,
       time,
       toaster,
-      pressurecooker,
       createdAt: Date.now(),
     }])
 

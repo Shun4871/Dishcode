@@ -98,10 +98,8 @@ analytics.get('/search', async c => {
         'people', ${searchLog.people},
         'oven', ${searchLog.oven},
         'hotplate', ${searchLog.hotplate},
-        'mixer', ${searchLog.mixer},
         'time', ${searchLog.time},
-        'toaster', ${searchLog.toaster},
-        'pressurecooker', ${searchLog.pressurecooker}
+        'toaster', ${searchLog.toaster}
       )`,
       createdAt: searchLog.createdAt,
       user: {
@@ -159,10 +157,8 @@ analytics.get('/csv', async c => {
     r.people,
     boolStr(r.oven),
     boolStr(r.hotplate),
-    boolStr(r.mixer),
     r.time,
     boolStr(r.toaster),
-    boolStr(r.pressurecooker),
     toISO(r.createdAt)
   ].join(','))
   const csv = [header.join(','), ...lines].join('\n')
