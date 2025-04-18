@@ -3,17 +3,28 @@ import urllib.parse
 def prompt_builder(params: str) -> str:
     parsed_params = urllib.parse.parse_qs(params)
 
+    selected = urllib.parse.unquote_plus(parsed_params.get('selected', [''])[0])
+    people = parsed_params.get('people', [''])[0]
+    time = parsed_params.get('time', [''])[0]
+    oven = parsed_params.get('oven', ['false'])[0].lower()
+    hotplate = parsed_params.get('hotplate', ['false'])[0].lower()
+
     conditions = [
-        f"人数: {parsed_params.get('people', [''])[0]}人",
-        f"オーブン: {'必要' if parsed_params.get('oven', ['false'])[0].lower() == 'true' else '不要'}",
-        f"ホットプレート: {'必要' if parsed_params.get('hotplate', ['false'])[0].lower() == 'true' else '不要'}",
-        f"ミキサー: {'必要' if parsed_params.get('mixer', ['false'])[0].lower() == 'true' else '不要'}",
-        f"調理時間: {parsed_params.get('time', [''])[0]}分",
-        f"トースター: {'必要' if parsed_params.get('toaster', ['false'])[0].lower() == 'true' else '不要'}",
-        f"圧力鍋: {'必要' if parsed_params.get('pressurecooker', ['false'])[0].lower() == 'true' else '不要'}",
-        f"選択された食材: {urllib.parse.unquote(parsed_params.get('selected', [''])[0])}"
+        f"選択された食材：{selected}",
+        f"人数：{people}人",
+        f"調理時間：{time}分",
     ]
 
-    prompt = "「https://www.yahoo.co.jp/」で検索してください、以下の条件を満たすレシピを3つ検索してください。条件ちょっと妥協してでも必ず3つのレシピのURLを出力してください。\n" + "、".join(conditions)
+    if oven != 'true':
+        conditions.append("オーブン：不要")
+    if hotplate != 'true':
+        conditions.append("ホットプレート：不要")
+
+    prompt = (
+        "以下の条件を満たすレシピを3つ検索してください。"
+        "Yahooなど、Google以外の検索エンジンで検索してください。"
+        "条件を多少妥協してでも、必ず3つのレシピのURLを出力してください。\n"
+        + "、".join(conditions)
+    )
 
     return prompt
