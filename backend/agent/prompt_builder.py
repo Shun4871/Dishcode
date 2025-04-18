@@ -24,7 +24,9 @@ def prompt_builder(params: str) -> str:
         "以下の条件を満たすレシピを3つ検索してください。"
         "Yahooなど、Google以外の検索エンジンで検索してください。"
         "条件を多少妥協してでも、必ず3つのレシピのURLを出力してください。\n"
-        + "、".join(conditions)
+        f"""フォーマットは以下の通りです。\n
+        {{"url1":"https://sample.url.1","url2":"https://sample.url.2","url3":"https://sample.url.3"}}
+        + "、".join(conditions)"""
     )
 
     return prompt
