@@ -20,4 +20,7 @@ def result_formatter(text: str):
         ]
     )
 
+    # 実行確認ログ
+    print(f"formatter: {response}")
+
     return(response.choices[0].message.content.strip())
