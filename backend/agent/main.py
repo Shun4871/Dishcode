@@ -35,4 +35,8 @@ async def search_recipes(
     # 結果をフォーマット
     formatted_result = result_formatter(result)
 
+    # フォーマットされた結果をログに残す
+    print(f"Formatted Result: {formatted_result}")
+
+    # フォーマットされた結果を返す
     return formatted_result
