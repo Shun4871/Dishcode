@@ -31,6 +31,9 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16" />
         <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
         <link rel="manifest" href="/favicons/site.webmanifest" />
+        <meta property="og:title" content="Dishcode" />
+        <meta property="og:description" content="数ある料理サイトからあなたに合うレシピをチョイス！" />
+        <meta property="og:image" content="/favicons/apple-touch-icon.png" />
       </head>
 
       <body className="flex flex-col min-h-screen">
