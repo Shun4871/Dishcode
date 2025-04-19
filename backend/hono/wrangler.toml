@@ -9,7 +9,6 @@ database_id = "3661ea71-7787-48ec-a54b-9cb349a04eac"
 
 [vars]
 PERPLEXITY_API_KEY="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"
-GEMINI_API_KEY = "AIzaSyCapZA6c5Pi2brD9NjLv2xUjuleS9dx2tg"
 EXTERNAL_API_URL = "https://dishcode-production.up.railway.app"
 NEXT_PUBLIC_API_BASE_URL="https://hono.daigaku-150207.workers.dev"
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA"

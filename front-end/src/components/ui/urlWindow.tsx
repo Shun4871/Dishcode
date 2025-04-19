@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -110,6 +111,22 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
       alert("お気に入りの更新に失敗しました");
     }
   };
+  const handleShare = async (recipe: Recipe) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          url: recipe.url,
+        });
+      } catch (err) {
+        console.warn("シェアに失敗しました:", err);
+      }
+    } else {
+      // Fallback: URLをコピー
+      await navigator.clipboard.writeText(recipe.url);
+      alert("レシピURLをクリップボードにコピーしました");
+    }
+  };
 
   if (loading) {
     return (
@@ -120,37 +137,58 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full justify-center items-center">
-      {recipes.map((recipe, index) => (
+    <div className="flex flex-col gap-8 w-full items-center px-8">
+      {recipes.map((recipe, idx) => (
         <div
-          key={index}
-          className="flex flex-row items-center border rounded-2xl p-6 shadow-md w-[600px]"
+          key={idx}
+          className="relative flex flex-col md:flex-row items-start md:items-center border rounded-2xl p-4 md:p-6 shadow-md w-full max-w-xl pb-12"
         >
-          <Image
-            src={recipe.image}
-            alt={recipe.title}
-            width={180}
-            height={180}
-            className="rounded-lg"
-          />
-          <div className="ml-4 flex-grow">
-            <Link
-              href={recipe.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+          {/* 画像部分 */}
+          <div
+            className="relative w-full md:w-1/3 h-24 md:aspect-square md:h-auto rounded-lg overflow-hidden"
+          >
+            <Image
+              src={recipe.image}
+              alt={recipe.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover"
+            />
+          </div>
+
+          {/* テキスト部分 */}
+          <div className="mt-4 md:mt-0 md:ml-6 flex-grow">
+            <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
               <h2 className="text-lg font-bold hover:underline">
                 {recipe.title}
               </h2>
             </Link>
           </div>
-          <div className="cursor-pointer" onClick={() => toggleFavorite(index)}>
-            <Image
-              src={favorites[index] ? "/like-star.svg" : "/not-like-star.svg"}
-              alt="like icon"
-              width={40}
-              height={40}
-            />
+
+          {/* ボタン */}
+          <div className="absolute bottom-4 right-4 flex space-x-2">
+            <button
+              onClick={() => toggleFavorite(idx)}
+              className="p-1 bg-white rounded-full shadow-md"
+              aria-label="お気に入り切り替え"
+            >
+              <Image
+                src={
+                  favorites[idx] ? "/like-star.svg" : "/not-like-star.svg"
+                }
+                alt="like icon"
+                width={28}
+                height={28}
+                className="object-contain"
+              />
+            </button>
+            <button
+              onClick={() => handleShare(recipe)}
+              className="p-1 bg-white rounded-full shadow-md"
+              aria-label="共有"
+            >
+              <Share2 size={28} />
+            </button>
           </div>
         </div>
       ))}

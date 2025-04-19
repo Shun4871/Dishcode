@@ -18,7 +18,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[#DD9004] text-white h-16 fixed top-0 left-0 w-full flex items-center">
+    <header className="bg-[#DD9004] z-[100] text-white h-16 fixed top-0 left-0 w-full flex items-center">
       <div className="max-w-6xl w-full mx-auto px-6 flex items-center justify-center gap-8">
         {/* ロゴ */}
         <div className="flex gap-2">
@@ -36,15 +36,6 @@ const Header = () => {
         </div>
 
         <div className="flex-1 max-w-md relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <Image src="/search.svg" alt="search icon" width={20} height={20} />
-          </div>
-
-          <input
-            type="text"
-            placeholder="料理名・食材でレシピを検索"
-            className="w-full h-10 px-10 pl-10 rounded-full text-black"
-          />
         </div>
       
         {/* メニューボタン */}

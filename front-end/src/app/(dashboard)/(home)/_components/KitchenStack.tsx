@@ -47,26 +47,33 @@ export function KitchenStack({ kitchenState, setKitchenState }: KitchenStackProp
   };
 
   return (
-    <div className="grid grid-cols-2 gap-8 p-6 border rounded-2xl shadow w-100rem">
+    <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 p-6 border rounded-2xl shadow w-full max-w-3xl mx-auto">
       {kitchenOptions.map(({ label, type, options, value }) => (
-        <div key={label} className="flex items-center justify-between space-y-4">
+        <div key={label} className="flex items-center justify-between space-x-4">
           <span className="font-bold">{label}</span>
           {type === "select" ? (
-            <Select onValueChange={(selected) => {
-              console.log(selected)
-              handleChange(value, Number(selected));
-            }}>
-              <SelectTrigger className="w-24">
+            <Select
+              onValueChange={(selected) => {
+                console.log(selected);
+                handleChange(value, Number(selected));
+              }}
+            >
+              <SelectTrigger className="w-28">
                 <SelectValue placeholder="選択" />
               </SelectTrigger>
               <SelectContent>
                 {options?.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
-            <Switch onCheckedChange={(checked) => handleChange(value, checked)} />
+            <Switch
+              checked={kitchenState[value as keyof Kitchen] as boolean}
+              onCheckedChange={(checked) => handleChange(value, checked)}
+            />
           )}
         </div>
       ))}
