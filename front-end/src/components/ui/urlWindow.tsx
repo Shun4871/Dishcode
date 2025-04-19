@@ -141,12 +141,50 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
       {recipes.map((recipe, idx) => (
         <div
           key={idx}
-          className="relative flex flex-col md:flex-row items-start md:items-center border rounded-2xl p-4 md:p-6 shadow-md w-full max-w-xl pb-12"
+          className="
+            relative flex flex-col md:flex-row
+            items-start md:items-center
+            border rounded-2xl
+            p-4 md:p-6 shadow-md
+            w-full max-w-xl
+            pb-4 md:pb-12       /* <- モバイルは下余白4, md以上は12 */
+          "
         >
-          {/* 画像部分 */}
+          {/* 画像＋モバイルボタン */}
           <div
-            className="relative w-full md:w-1/3 h-24 md:aspect-square md:h-auto rounded-lg overflow-hidden"
+            className="
+              relative
+              w-full md:w-1/3
+              h-32 md:h-full
+              md:aspect-square
+              rounded-lg overflow-hidden
+              flex-shrink-0
+            "
           >
+            {/* モバイル時：右下に配置 */}
+            <div className="absolute bottom-2 right-2 flex space-x-2 md:hidden z-10">
+              <button
+                onClick={() => toggleFavorite(idx)}
+                className="p-1 bg-white rounded-full shadow-md"
+                aria-label="お気に入り切り替え"
+              >
+                <Image
+                  src={favorites[idx] ? "/like-star.svg" : "/not-like-star.svg"}
+                  alt="like icon"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
+              </button>
+              <button
+                onClick={() => handleShare(recipe)}
+                className="p-1 bg-white rounded-full shadow-md"
+                aria-label="共有"
+              >
+                <Share2 size={28} />
+              </button>
+            </div>
+  
             <Image
               src={recipe.image}
               alt={recipe.title}
@@ -155,27 +193,25 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
               className="object-cover"
             />
           </div>
-
+  
           {/* テキスト部分 */}
-          <div className="mt-4 md:mt-0 md:ml-6 flex-grow">
+          <div className="mt-4 md:mt-0 md:ml-6 flex-grow md:h-24 overflow-hidden">
             <Link href={recipe.url} target="_blank" rel="noopener noreferrer">
-              <h2 className="text-lg font-bold hover:underline">
+              <h2 className="text-lg font-bold hover:underline line-clamp-2">
                 {recipe.title}
               </h2>
             </Link>
           </div>
-
-          {/* ボタン */}
-          <div className="absolute bottom-4 right-4 flex space-x-2">
+  
+          {/* デスクトップ時のボタン配置 */}
+          <div className="hidden md:flex absolute bottom-4 right-4 flex space-x-2">
             <button
               onClick={() => toggleFavorite(idx)}
               className="p-1 bg-white rounded-full shadow-md"
               aria-label="お気に入り切り替え"
             >
               <Image
-                src={
-                  favorites[idx] ? "/like-star.svg" : "/not-like-star.svg"
-                }
+                src={favorites[idx] ? "/like-star.svg" : "/not-like-star.svg"}
                 alt="like icon"
                 width={28}
                 height={28}
@@ -194,4 +230,8 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
       ))}
     </div>
   );
+  
+  
+  
+  
 };

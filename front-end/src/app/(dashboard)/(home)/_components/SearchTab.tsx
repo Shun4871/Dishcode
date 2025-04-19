@@ -97,7 +97,7 @@ type SearchTabProps = { onItemSelect: (display: string) => void };
 
 export function SearchTab({ onItemSelect }: SearchTabProps) {
   return (
-    <Tabs defaultValue="ingredients" className="w-full max-w-5xl mx-auto">
+    <Tabs defaultValue="text" className="w-full max-w-5xl mx-auto">
       {/* タブヘッダー */}
       <TabsList className="flex whitespace-nowrap overflow-x-auto border-b border-gray-200 bg-gray-100">
         <TabsTrigger

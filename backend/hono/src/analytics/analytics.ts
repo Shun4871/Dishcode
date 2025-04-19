@@ -16,10 +16,12 @@ const calcAge = (birthday: string | null): number | null => {
 
 // Boolean フラグ別カウント取得
 async function getBoolCounts(db: ReturnType<typeof drizzle>) {
+  // 検索ログ全件数取得
   const totalRec = await db.select({ cnt: sql`COUNT(*)` }).from(searchLog).all()
   const total = Number(totalRec[0]?.cnt ?? 0)
-  const flags = ['oven','hotplate','mixer','toaster','pressurecooker'] as const
-  const summary: Record<string, {true:number,false:number}> = {}
+  // スキーマに合わせてフラグを定義
+  const flags = ['oven', 'hotplate', 'toaster'] as const
+  const summary: Record<string, { true: number, false: number }> = {}
   for (const flag of flags) {
     const cntRec = await db
       .select({ cnt: (searchLog as any)[flag].count() })
@@ -42,7 +44,7 @@ async function getDemoCounts(db: ReturnType<typeof drizzle>) {
   const ageGroups: Record<string, number> = {}
   const genders: Record<string, number> = {}
   for (const r of rows) {
-    const ag = r.birthday ? `${Math.floor(calcAge(r.birthday)!/10)*10}s` : 'unknown'
+    const ag = r.birthday ? `${Math.floor(calcAge(r.birthday)! / 10) * 10}s` : 'unknown'
     ageGroups[ag] = (ageGroups[ag] || 0) + 1
     const g = r.gender || 'unspecified'
     genders[g] = (genders[g] || 0) + 1
@@ -52,9 +54,8 @@ async function getDemoCounts(db: ReturnType<typeof drizzle>) {
 
 const analytics = new Hono<{ Bindings: { DB: D1Database } }>()
 
-
 // お気に入り分析
-analytics.get('favorite', async c => {
+analytics.get('/favorite', async c => {
   const db = getDb(c)
   const rows = await db
     .select({
@@ -73,6 +74,7 @@ analytics.get('favorite', async c => {
     .leftJoin(user, eq(user.id, favorite.userId))
     .orderBy(sql`${favorite.createdAt} DESC`)
     .limit(100)
+
   const result = rows.map(r => ({
     favId: r.id,
     recipeURL: r.recipeURL,
@@ -113,6 +115,7 @@ analytics.get('/search', async c => {
     .leftJoin(user, eq(user.clerkId, searchLog.clerkId))
     .orderBy(sql`${searchLog.createdAt} DESC`)
     .limit(100)
+
   const result = rows.map(r => {
     const p = JSON.parse((r as any).params)
     return {
@@ -137,7 +140,7 @@ analytics.get('/users', async c => {
     .select({
       clerkId: user.clerkId,
       email: user.email,
-      age: sql`(strftime('%Y', 'now') - substr(${user.birthday},1,4))`,
+      age: sql`(strftime('%Y', 'now') - substr(${user.birthday}, 1, 4))`,
       gender: user.gender
     })
     .from(user)
@@ -150,8 +153,8 @@ analytics.get('/users', async c => {
 analytics.get('/csv', async c => {
   const db = getDb(c)
   const rows = await db.select().from(searchLog).all()
-  const header = ['clerkId','people','oven','hotplate','mixer','time','toaster','pressurecooker','createdAt']
-  const boolStr = (b: number) => b ? 'true':'false'
+  const header = ['clerkId','people','oven','hotplate','time','toaster','createdAt']
+  const boolStr = (b: number) => b ? 'true' : 'false'
   const lines = rows.map(r => [
     r.clerkId,
     r.people,
@@ -162,8 +165,8 @@ analytics.get('/csv', async c => {
     toISO(r.createdAt)
   ].join(','))
   const csv = [header.join(','), ...lines].join('\n')
-  c.header('Content-Type','text/csv')
-  c.header('Content-Disposition','attachment; filename=search_log.csv')
+  c.header('Content-Type', 'text/csv')
+  c.header('Content-Disposition', 'attachment; filename=search_log.csv')
   return c.body(csv)
 })
 
@@ -179,89 +182,109 @@ analytics.get('/xlsx', async c => {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(searchRows), 'SearchLogs')
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(favRows), 'Favorites')
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(userRows), 'Users')
-  const buf = XLSX.write(wb, { bookType:'xlsx', type:'array' })
-  c.header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  c.header('Content-Disposition','attachment; filename=analytics.xlsx')
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+  c.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  c.header('Content-Disposition', 'attachment; filename=analytics.xlsx')
   return c.body(new Uint8Array(buf))
 })
 
 // ダッシュボード HTML
-analytics.get('/dashboard', (c) =>{
-    const html = String.raw`<!DOCTYPE html>
-  <html lang="ja">
-  <head>
-    <meta charset="UTF-8"/>
-    <title>検索ログ Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  </head>
-  <body>
-    <h1>検索ログ Dashboard</h1>
-    <canvas id="boolChart" width="600" height="400"></canvas>
-    <canvas id="ageChart"  width="400" height="400"></canvas>
-    <canvas id="genderChart" width="400" height="400"></canvas>
-    <script>
-      (async () => {
-        // 1) Boolean フラグ集計 (CSV)
-        const resCsv = await fetch('/analytics/csv')
-        const text = await resCsv.text()
-        const [headerLine, ...lines] = text.trim().split('\n')
-        const labels = headerLine.split(',')
-        const counts = {}
-        labels.forEach(col => { counts[col] = { true:0, false:0 } })
-        lines.forEach(row => {
-          const vals = row.split(',')
-          vals.forEach((v,i) => { counts[labels[i]][v]++ })
-        })
-        // 2) Boolean 棒グラフ描画
-        const ctxBool = document.getElementById('boolChart').getContext('2d')
-        new Chart(ctxBool, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [
-              { label: 'True',  data: labels.map(c => counts[c].true) },
-              { label: 'False', data: labels.map(c => counts[c].false) }
-            ]
-          },
-          options: { scales: { y: { beginAtZero: true } } }
-        })
-  
-        // 3) ユーザー分析 (年代 & 性別)
-        const resUsers = await fetch('/analytics/users')
-        const users = await resUsers.json()
-        const ageCounts = {}, genderCounts = {}
-        users.forEach(u => {
-          const ag = u.age !== null ? Math.floor(u.age/10)*10 + 's' : 'unknown'
-          ageCounts[ag] = (ageCounts[ag]||0) + 1
-          const g = u.gender || 'unspecified'
-          genderCounts[g] = (genderCounts[g]||0) + 1
-        })
-        // 4) 年代帯棒グラフ
-        const ctxAge = document.getElementById('ageChart').getContext('2d')
-        new Chart(ctxAge, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(ageCounts),
-            datasets: [{ label: '人数', data: Object.values(ageCounts) }]
-          },
-          options: { scales: { y: { beginAtZero: true } } }
-        })
-        // 5) 性別棒グラフ
-        const ctxGen = document.getElementById('genderChart').getContext('2d')
-        new Chart(ctxGen, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(genderCounts),
-            datasets: [{ label: '人数', data: Object.values(genderCounts) }]
-          },
-          options: { scales: { y: { beginAtZero: true } } }
-        })
-      })()
-    </script>
-  </body>
-  </html>`
-    return c.html(html)
-  })
-  
+analytics.get('/dashboard', c => {
+  const html = String.raw`<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <title>検索ログ Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .chart-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 30px;
+    }
+    canvas {
+      max-width: 300px;
+      max-height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>検索ログ Dashboard</h1>
+  <div class="chart-container">
+    <canvas id="boolChart"></canvas>
+    <canvas id="ageChart"></canvas>
+    <canvas id="genderChart"></canvas>
+  </div>
+  <script>
+    (async () => {
+      const resCsv = await fetch('/analytics/csv')
+      const text = await resCsv.text()
+      const [headerLine, ...lines] = text.trim().split('\n')
+      const labels = headerLine.split(',')
+      const counts = {}
+      labels.forEach(col => { counts[col] = { true:0, false:0 } })
+      lines.forEach(row => {
+        const vals = row.split(',')
+        vals.forEach((v,i) => { counts[labels[i]][v]++ })
+      })
+
+      const ctxBool = document.getElementById('boolChart').getContext('2d')
+      new Chart(ctxBool, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'True',  data: labels.map(c => counts[c].true), backgroundColor: 'rgba(75, 192, 192, 0.7)' },
+            { label: 'False', data: labels.map(c => counts[c].false), backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+          ]
+        },
+        options: { scales: { y: { beginAtZero: true } }, responsive: true }
+      })
+
+      const resUsers = await fetch('/analytics/users')
+      const users = await resUsers.json()
+      const ageCounts = {}, genderCounts = {}
+      users.forEach(u => {
+        const ag = u.age !== null ? Math.floor(u.age/10)*10 + 's' : 'unknown'
+        ageCounts[ag] = (ageCounts[ag]||0) + 1
+        const g = u.gender || 'unspecified'
+        genderCounts[g] = (genderCounts[g]||0) + 1
+      })
+
+      const ctxAge = document.getElementById('ageChart').getContext('2d')
+      new Chart(ctxAge, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(ageCounts),
+          datasets: [{ label: '人数', data: Object.values(ageCounts), backgroundColor: 'rgba(153, 102, 255, 0.7)' }]
+        },
+        options: { scales: { y: { beginAtZero: true } }, responsive: true }
+      })
+
+      const ctxGen = document.getElementById('genderChart').getContext('2d')
+      new Chart(ctxGen, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(genderCounts),
+          datasets: [{ label: '人数', data: Object.values(genderCounts), backgroundColor: 'rgba(255, 206, 86, 0.7)' }]
+        },
+        options: { scales: { y: { beginAtZero: true } }, responsive: true }
+      })
+    })()
+  </script>
+</body>
+</html>`
+  return c.html(html)
+})
+
 
 export default analytics
