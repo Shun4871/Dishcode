@@ -4,6 +4,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { UrlWindow, Recipe } from "@/components/ui/urlWindow";
 import Link from "next/link";
+import { Load } from "@/components/Load";
+import { Flex } from "@/components/ui/flex";
 
 export default function FavoritePage() {
   const { userId, getToken } = useAuth();
@@ -39,11 +41,19 @@ export default function FavoritePage() {
   }, [userId, getToken]);
 
   if (!userId) {
-    return <div>ユーザーが認証されていません</div>;
+    return (
+      <Flex className="flex-col gap-10 m-20">
+        <Load />
+      </Flex>
+    )
   }
 
   if (loading) {
-    return <div>読み込み中...</div>;
+    return (
+      <Flex className="flex-col gap-10 m-20">
+        <Load />
+      </Flex>
+    )
   }
 
   return (

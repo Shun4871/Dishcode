@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { Load } from "@/components/Load";
+import { Flex } from "@/components/ui/flex";
 
 export interface Recipe {
   title: string;
@@ -110,7 +112,11 @@ export const UrlWindow: React.FC<UrlWindowProps> = ({ recipes }) => {
   };
 
   if (loading) {
-    return <div className="text-center mt-10">読み込み中...</div>;
+    return (
+      <Flex className="flex-col gap-10 m-20">
+        <Load />
+      </Flex>
+    )
   }
 
   return (

@@ -33,7 +33,7 @@ export const Load = () => {
   const dots = ".".repeat(dotCount); // ドットの数を制御
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+    <div className="fixed inset-0 z-[10000] bg-black bg-opacity-40 flex items-center justify-center">
       {/* #DD9004の角丸背景 */}
       <div className="bg-[#DD9004] rounded-2xl w-60 h-60 flex flex-col items-center justify-center relative">
         <div className="relative w-24 h-24 flex items-center justify-center">
