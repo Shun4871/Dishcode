@@ -11,6 +11,8 @@
     }
   ],
   "vars": {
+    "PERPLEXITY_API_KEY":"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",
+    "GEMINI_API_KEY":"AIzaSyCapZA6c5Pi2brD9NjLv2xUjuleS9dx2tg",
     "EXTERNAL_API_URL" : "https://dishcode-production.up.railway.app",
     "CLERK_PUBLISHABLE_KEY":"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" :"pk_test_cmlnaHQtbWFzdG9kb24tNzQuY2xlcmsuYWNjb3VudHMuZGV2JA",

@@ -21,6 +21,8 @@ export type Bindings = {
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
   EXTERNAL_API_URL: string;
+  GEMINI_API_KEY: string;
+  PERPLEXITY_API_KEY: string;
 };
 
 
@@ -101,25 +103,106 @@ app.route('/', metadataRoute);
 
 app.route('/analytics', analytics);
 
+// app.get('/recipe', async (c) => {
+//   try {
+//     // 1) ユーザー認証トークンがあれば取得（未ログインの場合は userId は undefined）
+//     const auth = getAuth(c);
+//     const clerkId = auth?.userId;  // ログイン済みなら文字列、未ログインなら undefined
+
+//     // 2) Drizzle で DB 接続
+//     const db = drizzle(c.env.DB);
+
+//     // 3) クエリパラメータを取得 & パース
+//     const query = c.req.query() as Record<string, string>;
+//     const people         = parseInt(query.people        ?? '0', 10);
+//     const oven           = query.oven          === 'true' ? 1 : 0;
+//     const hotplate       = query.hotplate      === 'true' ? 1 : 0;
+//     const time           = parseInt(query.time          ?? '0', 10);
+//     const toaster        = query.toaster       === 'true' ? 1 : 0;
+
+//     // 4) （任意）ログイン済みユーザーのみ検索ログを保存
+//     if (clerkId) {
+//       await db.insert(searchLog).values([{
+//         clerkId,
+//         people,
+//         oven,
+//         hotplate,
+//         time,
+//         toaster,
+//         createdAt: Date.now(),
+//       }]);
+//     }
+
+//     // 5) 同じパラメータで外部 API を呼び出し
+//     const params = new URLSearchParams(query);
+//     const baseUrl = c.env.EXTERNAL_API_URL;
+//     if (!baseUrl) {
+//       return c.json({ error: 'External API URL not configured' }, 500);
+//     }
+
+//     const target = `${baseUrl}/api/search-agent-super-cool?${params.toString()}`;
+//     const resp = await fetch(target, { method: 'GET' });
+//     if (!resp.ok) {
+//       return c.json(
+//         { error: 'External API fetch failed', status: resp.status },
+//         502
+//       );
+//     }
+
+//     // 6) 結果をパースして返却
+//     const data = await resp.json() as {
+//       url1?: string;
+//       url2?: string;
+//       url3?: string;
+//     };
+
+//     const { url1, url2, url3 } = data;
+//     if (
+//       typeof url1 !== 'string' ||
+//       typeof url2 !== 'string' ||
+//       typeof url3 !== 'string'
+//     ) {
+//       return c.json(
+//         { error: 'Invalid external API response format', data },
+//         503
+//       );
+//     }
+
+//     return c.json({ url1, url2, url3 });
+
+//   } catch (e: any) {
+//     console.error(e);
+//     return c.json(
+//       { error: 'Internal Server Error', details: e.message || String(e) },
+//       500
+//     );
+//   }
+// });
+
+// 
+
+
 app.get('/recipe', async (c) => {
   try {
-    // 1) ユーザー認証トークンがあれば取得（未ログインの場合は userId は undefined）
-    const auth = getAuth(c);
-    const clerkId = auth?.userId;  // ログイン済みなら文字列、未ログインなら undefined
+    console.log('🔐 認証チェック開始')
+    const auth = getAuth(c)
+    const clerkId = auth?.userId
+    console.log('👤 clerkId:', clerkId)
 
-    // 2) Drizzle で DB 接続
-    const db = drizzle(c.env.DB);
+    const db = drizzle(c.env.DB)
 
-    // 3) クエリパラメータを取得 & パース
-    const query = c.req.query() as Record<string, string>;
-    const people         = parseInt(query.people        ?? '0', 10);
-    const oven           = query.oven          === 'true' ? 1 : 0;
-    const hotplate       = query.hotplate      === 'true' ? 1 : 0;
-    const time           = parseInt(query.time          ?? '0', 10);
-    const toaster        = query.toaster       === 'true' ? 1 : 0;
+    const query = c.req.query() as Record<string, string>
+    const people   = parseInt(query.people        ?? '0', 10)
+    const oven     = query.oven     === 'true' ? 1 : 0
+    const hotplate = query.hotplate === 'true' ? 1 : 0
+    const time     = parseInt(query.time         ?? '0', 10)
+    const toaster  = query.toaster  === 'true' ? 1 : 0
+    const selected = decodeURIComponent(query.selected ?? '')
 
-    // 4) （任意）ログイン済みユーザーのみ検索ログを保存
+    console.log('🔍 クエリ:', { selected, people, oven, hotplate, time, toaster })
+
     if (clerkId) {
+      console.log('📝 検索ログを保存します')
       await db.insert(searchLog).values([{
         clerkId,
         people,
@@ -128,54 +211,103 @@ app.get('/recipe', async (c) => {
         time,
         toaster,
         createdAt: Date.now(),
-      }]);
+      }])
     }
 
-    // 5) 同じパラメータで外部 API を呼び出し
-    const params = new URLSearchParams(query);
-    const baseUrl = c.env.EXTERNAL_API_URL;
-    if (!baseUrl) {
-      return c.json({ error: 'External API URL not configured' }, 500);
+    // プロンプトの作成
+    // 使用不可な調理器具をリストアップ（true のときは使えるので false のみ対象）
+    const ngTools: string[] = []
+    if (!oven) ngTools.push('オーブン')
+    if (!hotplate) ngTools.push('ホットプレート')
+
+    const toolCondition = ngTools.length > 0
+      ? `- ${ngTools.join('、')}を使わないこと`
+      : ''  // 両方 true のときは条件なし
+
+    const prompt = `
+    以下の条件に合うレシピを教えてください。日本のレシピサイトのURLを5つください。必ずリンクで、JSON形式で出力してください。
+
+    - 材料: ${selected}
+    - 人数: ${people}人
+    - 調理時間: ${time}分以内
+    - ${toolCondition}
+    - 対象サイト: DELISH KITCHEN、クックパッド, レシピブログ、楽天レシピ、E・レシピ、Nadia、kurashiru(3つとも違うサイトから選んでください)
+    形式：[{"title":"レシピ名","url":"https://〜"}]
+    `.trim()
+
+    console.log('🧠 Perplexity に送るプロンプト:', prompt)
+
+    const perplexityRes = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${c.env.PERPLEXITY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'sonar-pro',
+        max_tokens: 512,
+        temperature: 0.0,
+        messages: [
+          {
+            role: 'system',
+            content: 'あなたはJSON形式でのみ回答するアシスタントです。余計な説明はせず、ユーザーの指示に従って正確に出力してください。',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          }
+        ]
+      })
+    })
+
+    console.log('🌐 Perplexity 応答ステータス:', perplexityRes.status)
+
+    if (!perplexityRes.ok) {
+      console.error('⚠️ Perplexity API からの応答エラー')
+      return c.json({ error: 'Failed to fetch from Perplexity', status: perplexityRes.status }, 502)
     }
 
-    const target = `${baseUrl}/api/search-agent-super-cool?${params.toString()}`;
-    const resp = await fetch(target, { method: 'GET' });
-    if (!resp.ok) {
-      return c.json(
-        { error: 'External API fetch failed', status: resp.status },
-        502
-      );
+    const perplexityJson: any = await perplexityRes.json()
+    const content = perplexityJson.choices?.[0]?.message?.content
+    console.log('🧾 Perplexity 応答 content:', content)
+
+    if (!content) {
+      console.error('⚠️ Perplexity の content が空')
+      return c.json({ error: 'No content in Perplexity response', perplexityJson }, 503)
     }
 
-    // 6) 結果をパースして返却
-    const data = await resp.json() as {
-      url1?: string;
-      url2?: string;
-      url3?: string;
-    };
-
-    const { url1, url2, url3 } = data;
-    if (
-      typeof url1 !== 'string' ||
-      typeof url2 !== 'string' ||
-      typeof url3 !== 'string'
-    ) {
-      return c.json(
-        { error: 'Invalid external API response format', data },
-        503
-      );
+    let parsed: { title: string, url: string }[]
+    try {
+      parsed = JSON.parse(content)
+      console.log('✅ JSON パース成功:', parsed)
+    } catch (e) {
+      console.error('❌ JSON パース失敗', content)
+      return c.json({ error: 'Failed to parse JSON from Perplexity content', raw: content }, 503)
     }
 
-    return c.json({ url1, url2, url3 });
+    const urls = parsed
+      .filter(item => typeof item.url === 'string')
+      .slice(0, 5
+      )
+      .map(item => item.url)
+
+    console.log('📦 抽出されたURL:', urls)
+
+    return c.json({
+      url1: urls[0] ?? null,
+      url2: urls[1] ?? null,
+      url3: urls[2] ?? null,
+      url4: urls[3] ?? null,
+      url5: urls[4] ?? null,
+    })
 
   } catch (e: any) {
-    console.error(e);
-    return c.json(
-      { error: 'Internal Server Error', details: e.message || String(e) },
-      500
-    );
+    console.error('🔥 予期せぬエラー:', e)
+    return c.json({ error: 'Internal Server Error', details: e.message || String(e) }, 500)
   }
-});
+})
+
+
 
 
 

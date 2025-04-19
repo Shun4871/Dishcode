@@ -28,17 +28,14 @@ metadataRoute.get('/metadata', async (c) => {
 
       return { url, title, image };
     } catch (e) {
-      console.error(`Error fetching metadata for ${url}:`, e);
-      return {
-        url,
-        title: '取得失敗',
-        image: '',
-      };
+      console.error(`❌ Error fetching metadata for ${url}:`, e);
+      return null; // 取得失敗は除外対象
     }
   };
 
-  const results = await Promise.all(urlList.map(fetchMetadata));
+  const resultsWithNulls = await Promise.all(urlList.map(fetchMetadata));
+  const results = resultsWithNulls.filter((r): r is { url: string; title: string; image: string } => r !== null);
+
   return c.json(results);
 });
-
 export default metadataRoute;

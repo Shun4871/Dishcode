@@ -16,7 +16,7 @@ const kitchenOptions = [
       { value: "60", label: "60分以内" },
       { value: "90", label: "90分以上" }
     ] },
-  //{ label: "トースター", type: "switch" , value :"toaster"},
+  { label: "トースター", type: "switch" , value :"toaster"},
   { label: "何人暮らし", type: "select", value:"people",
     options: [
       { value: "1", label: "1人" },

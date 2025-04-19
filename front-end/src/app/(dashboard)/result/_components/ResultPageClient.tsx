@@ -1,4 +1,3 @@
-// ファイル例：pages/result.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -10,10 +9,14 @@ export default function ResultPageClient() {
   const searchParams = useSearchParams();
   const [items, setItems] = useState<Recipe[]>([]);
 
-  // URLパラメータからレシピURLを取得
-  const url1 = searchParams.get("url1") || undefined;
-  const url2 = searchParams.get("url2") || undefined;
-  const url3 = searchParams.get("url3") || undefined;
+  // URLパラメータから最大5つ取得
+  const urls = [
+    searchParams.get("url1"),
+    searchParams.get("url2"),
+    searchParams.get("url3"),
+    searchParams.get("url4"),
+    searchParams.get("url5"),
+  ].filter((url): url is string => !!url); // null を除外
 
   // メタデータを取得する関数
   const fetchAllMetadata = async (urls: string[]): Promise<Recipe[]> => {
@@ -25,7 +28,6 @@ export default function ResultPageClient() {
       return data;
     } catch (error) {
       console.error("メタデータ取得エラー:", error);
-      // 失敗時はエラーメッセージ付きのダミーデータを返す
       return urls.map(url => ({
         title: "取得エラー",
         image: "",
@@ -35,13 +37,12 @@ export default function ResultPageClient() {
   };
 
   useEffect(() => {
-    const urls: string[] = [url1, url2, url3].filter((url): url is string => !!url);
     if (urls.length > 0) {
       fetchAllMetadata(urls).then(results => {
         setItems(results);
       });
     }
-  }, [url1, url2, url3]);
+  }, [searchParams]); // searchParams が変わったときに再取得
 
   return (
     <div className="mt-16 flex flex-col gap-6 w-full justify-center items-center">
